@@ -21,7 +21,7 @@
     <!-- Panel de Tabla y Filtros (1/3 de la pantalla en web) -->
     <div class="sidebar">
       <div class="panel-header">
-        <h1>Ubicación de las estructuras de la Línea 2 y Ramal L4</h1>
+        <div class="app-title-discreet">Ubicación de las estructuras de la Línea 2 y Ramal L4</div>
         <div class="filters-container">
           <input type="text" id="searchFilter" class="filter-input" placeholder="Filtrar por ID, Nombre o Tipo..." />
           <div style="display: flex; gap: 6px;">
@@ -53,14 +53,13 @@
     </div>
   </div>
 
-  <!-- Scripts de Seguridad y Dependencias -->
+  <!-- Scripts de Dependencias y Seguridad -->
   <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.4.1/papaparse.min.js"></script>
   <script src="disclaimer.js"></script>
   <script src="auth.js"></script>
 
   <script>
-    // URL del Google Sheets en CSV proporcionada
     const SHEET_CSV_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vQOJZ3-HTVbEGff5qSi85ljxanEgzPkM4AxacQgE-slHciuSB0AYB7Mdz8ia8WIbcHSmA5QPramorj6/pub?gid=0&single=true&output=csv";
     
     // Paleta de colores pastel suaves para distritos
@@ -84,7 +83,7 @@
     const map = L.map('map', { zoomControl: false }).setView([-12.0464, -77.0428], 12);
     L.control.zoom({ position: 'topright' }).addTo(map);
 
-    // Capa base gris suave
+    // Capa base gris suave institucional
     L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png', {
       maxZoom: 19,
       attribution: '&copy; OpenStreetMap contributors & CARTO'
@@ -93,16 +92,15 @@
     let markersLayer = L.layerGroup().addTo(map);
     let polygonsLayer = L.layerGroup().addTo(map);
     let allStructures = [];
-    let districtPolygonsData = null;
+    let tableRowsMap = new Map();
 
-    // Cargar GeoJSON de Distritos
-    fetch('data/distritos.geojson')
+    // Cargar GeoJSON de Distritos desde la raíz
+    fetch('DISTRITOS.geojson')
       .then(res => res.json())
       .then(data => {
-        districtPolygonsData = data;
         renderDistricts(data);
       })
-      .catch(err => console.log("Carga de GeoJSON externa omitida o en proceso:", err));
+      .catch(err => console.error("Error al cargar DISTRITOS.geojson:", err));
 
     function renderDistricts(geojson) {
       polygonsLayer.clearLayers();
@@ -120,13 +118,12 @@
         onEachFeature: function(feature, layer) {
           const distrito = feature.properties.DISTRITO;
           if (distrito) {
-            // Añadir el título del distrito a una altura prudente
             const center = layer.getBounds().getCenter();
             L.marker(center, {
               icon: L.divIcon({
                 className: 'district-label',
                 html: `<div>${distrito}</div>`,
-                iconSize: [100, 20]
+                iconSize: [120, 20]
               })
             }).addTo(polygonsLayer);
           }
@@ -134,7 +131,7 @@
       }).addTo(polygonsLayer);
     }
 
-    // Cargar Datos del CSV de Estructuras
+    // Cargar Datos del CSV de Google Sheets
     Papa.parse(SHEET_CSV_URL, {
       download: true,
       header: true,
@@ -157,7 +154,6 @@
     }
 
     function getIconForType(tipo) {
-      // Icono representativo personalizado o marcador circular según tipo
       return L.divIcon({
         className: 'custom-pin',
         html: `<div style="background-color: #2563eb; width: 12px; height: 12px; border: 2px solid white; border-radius: 50%; box-shadow: 0 0 4px rgba(0,0,0,0.4);"></div>`,
@@ -169,18 +165,17 @@
       markersLayer.clearLayers();
       const tbody = document.getElementById('tableBody');
       tbody.innerHTML = '';
+      tableRowsMap.clear();
 
       const latLngs = [];
 
-      data.forEach((item, index) => {
+      data.forEach((item) => {
         const lat = parseFloat(item.LAT);
         const lng = parseFloat(item.LONG);
         latLngs.push([lat, lng]);
 
-        // Marcador en el mapa con ID flotante adaptativo
         const marker = L.marker([lat, lng], { icon: getIconForType(item.TIPO) });
         
-        // Ventana emergente (Popup) al hacer clic o hover
         const popupContent = `
           <div style="font-size: 0.85rem; line-height: 1.4;">
             <strong style="color: #1e293b; font-size: 0.95rem;">${item.ID}</strong><br/>
@@ -192,7 +187,6 @@
         `;
         marker.bindPopup(popupContent);
 
-        // Etiqueta de ID permanente discreta junto al icono
         marker.bindTooltip(item.ID, {
           permanent: true,
           direction: 'top',
@@ -212,10 +206,11 @@
           <td>${item.DISTRITO || ''}</td>
         `;
 
-        // Interacción Tabla -> Mapa (Centrar y abrir popup)
+        // Interacción Tabla <-> Mapa
         tr.addEventListener('mouseenter', () => {
           tr.classList.add('selected');
           marker.openPopup();
+          map.panTo([lat, lng], { animate: true });
         });
         tr.addEventListener('mouseleave', () => {
           tr.classList.remove('selected');
@@ -226,6 +221,14 @@
           marker.openPopup();
         });
 
+        marker.on('mouseover', () => {
+          tr.classList.add('selected');
+        });
+        marker.on('mouseout', () => {
+          tr.classList.remove('selected');
+        });
+
+        tableRowsMap.set(item.ID, tr);
         tbody.appendChild(tr);
       });
 
@@ -236,14 +239,13 @@
       }
     }
 
-    // Filtros dinámicos
     function applyFilters() {
       const query = document.getElementById('searchFilter').value.toLowerCase();
       const prov = document.getElementById('provinceFilter').value;
       const dist = document.getElementById('districtFilter').value;
 
       const filtered = allStructures.filter(item => {
-        const matchQuery = Object.values(item.trim()).some(val => String(val).toLowerCase().includes(query));
+        const matchQuery = Object.values(item).some(val => String(val).toLowerCase().includes(query));
         const matchProv = !prov || item.PROVINCIA === prov;
         const matchDist = !dist || item.DISTRITO === dist;
         return matchQuery && matchProv && matchDist;
@@ -256,14 +258,13 @@
     document.getElementById('provinceFilter').addEventListener('change', applyFilters);
     document.getElementById('districtFilter').addEventListener('change', applyFilters);
 
-    // Leyenda inferior derecha
+    // Leyenda en la parte inferior derecha
     const legend = L.control({ position: 'bottomright' });
     legend.onAdd = function (map) {
       const div = L.create('div', 'map-legend');
       div.innerHTML = `
         <strong>Leyenda - Estructuras</strong>
-        <div class="legend-item"><div class="legend-color" style="background:#2563eb;"></div> Estación / Pozo / Pique</div>
-        <div class="legend-item"><div class="legend-color" style="background:#10b981;"></div> Patio Taller / Ventilación</div>
+        <div class="legend-item"><div class="legend-color" style="background:#2563eb;"></div> Estación / Estructura Principal</div>
       `;
       return div;
     };
