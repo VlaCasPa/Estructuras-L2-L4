@@ -1,0 +1,273 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Ubicación de las estructuras de la Línea 2 y Ramal L4</title>
+  
+  <!-- Leaflet CSS -->
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+  <!-- Custom CSS -->
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+
+  <div class="app-container">
+    <!-- Mapa (2/3 de la pantalla en web) -->
+    <div id="map">
+      <div class="author-credit">DISEÑADO POR VLADIMIR CASAS</div>
+    </div>
+
+    <!-- Panel de Tabla y Filtros (1/3 de la pantalla en web) -->
+    <div class="sidebar">
+      <div class="panel-header">
+        <h1>Ubicación de las estructuras de la Línea 2 y Ramal L4</h1>
+        <div class="filters-container">
+          <input type="text" id="searchFilter" class="filter-input" placeholder="Filtrar por ID, Nombre o Tipo..." />
+          <div style="display: flex; gap: 6px;">
+            <select id="provinceFilter" class="filter-select">
+              <option value="">Todas las Provincias</option>
+            </select>
+            <select id="districtFilter" class="filter-select">
+              <option value="">Todos los Distritos</option>
+            </select>
+          </div>
+        </div>
+      </div>
+      <div class="table-container">
+        <table class="data-table">
+          <thead>
+            <tr>
+              <th>ID</th>
+              <th>Tipo</th>
+              <th>Línea</th>
+              <th>Provincia</th>
+              <th>Distrito</th>
+            </tr>
+          </thead>
+          <tbody id="tableBody">
+            <!-- Datos dinámicos -->
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <!-- Scripts de Seguridad y Dependencias -->
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.4.1/papaparse.min.js"></script>
+  <script src="disclaimer.js"></script>
+  <script src="auth.js"></script>
+
+  <script>
+    // URL del Google Sheets en CSV proporcionada
+    const SHEET_CSV_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vQOJZ3-HTVbEGff5qSi85ljxanEgzPkM4AxacQgE-slHciuSB0AYB7Mdz8ia8WIbcHSmA5QPramorj6/pub?gid=0&single=true&output=csv";
+    
+    // Paleta de colores pastel suaves para distritos
+    const pastelColors = [
+      '#fecdd3', '#fed7aa', '#fef08a', '#bbf7d0', '#99f6e4', 
+      '#bae6fd', '#c7d2fe', '#f5d0fe', '#fbcfe8', '#e2e8f0', '#ffedd5'
+    ];
+    const districtColorMap = {};
+    let colorIndex = 0;
+
+    function getDistrictColor(district) {
+      if (!district) return '#e2e8f0';
+      if (!districtColorMap[district]) {
+        districtColorMap[district] = pastelColors[colorIndex % pastelColors.length];
+        colorIndex++;
+      }
+      return districtColorMap[district];
+    }
+
+    // Inicialización del Mapa
+    const map = L.map('map', { zoomControl: false }).setView([-12.0464, -77.0428], 12);
+    L.control.zoom({ position: 'topright' }).addTo(map);
+
+    // Capa base gris suave
+    L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png', {
+      maxZoom: 19,
+      attribution: '&copy; OpenStreetMap contributors & CARTO'
+    }).addTo(map);
+
+    let markersLayer = L.layerGroup().addTo(map);
+    let polygonsLayer = L.layerGroup().addTo(map);
+    let allStructures = [];
+    let districtPolygonsData = null;
+
+    // Cargar GeoJSON de Distritos
+    fetch('data/distritos.geojson')
+      .then(res => res.json())
+      .then(data => {
+        districtPolygonsData = data;
+        renderDistricts(data);
+      })
+      .catch(err => console.log("Carga de GeoJSON externa omitida o en proceso:", err));
+
+    function renderDistricts(geojson) {
+      polygonsLayer.clearLayers();
+      L.geoJSON(geojson, {
+        style: function(feature) {
+          const distrito = feature.properties.DISTRITO || '';
+          return {
+            fillColor: getDistrictColor(distrito),
+            weight: 1.5,
+            opacity: 1,
+            color: '#94a3b8',
+            fillOpacity: 0.35
+          };
+        },
+        onEachFeature: function(feature, layer) {
+          const distrito = feature.properties.DISTRITO;
+          if (distrito) {
+            // Añadir el título del distrito a una altura prudente
+            const center = layer.getBounds().getCenter();
+            L.marker(center, {
+              icon: L.divIcon({
+                className: 'district-label',
+                html: `<div>${distrito}</div>`,
+                iconSize: [100, 20]
+              })
+            }).addTo(polygonsLayer);
+          }
+        }
+      }).addTo(polygonsLayer);
+    }
+
+    // Cargar Datos del CSV de Estructuras
+    Papa.parse(SHEET_CSV_URL, {
+      download: true,
+      header: true,
+      complete: function(results) {
+        allStructures = results.data.filter(row => row.ID && row.LAT && row.LONG);
+        populateFilters(allStructures);
+        updateDisplay(allStructures);
+      }
+    });
+
+    function populateFilters(data) {
+      const provinces = [...new Set(data.map(item => item.PROVINCIA).filter(Boolean))];
+      const districts = [...new Set(data.map(item => item.DISTRITO).filter(Boolean))];
+
+      const provSelect = document.getElementById('provinceFilter');
+      provinces.forEach(p => provSelect.innerHTML += `<option value="${p}">${p}</option>`);
+
+      const distSelect = document.getElementById('districtFilter');
+      districts.forEach(d => distSelect.innerHTML += `<option value="${d}">${d}</option>`);
+    }
+
+    function getIconForType(tipo) {
+      // Icono representativo personalizado o marcador circular según tipo
+      return L.divIcon({
+        className: 'custom-pin',
+        html: `<div style="background-color: #2563eb; width: 12px; height: 12px; border: 2px solid white; border-radius: 50%; box-shadow: 0 0 4px rgba(0,0,0,0.4);"></div>`,
+        iconSize: [12, 12]
+      });
+    }
+
+    function updateDisplay(data) {
+      markersLayer.clearLayers();
+      const tbody = document.getElementById('tableBody');
+      tbody.innerHTML = '';
+
+      const latLngs = [];
+
+      data.forEach((item, index) => {
+        const lat = parseFloat(item.LAT);
+        const lng = parseFloat(item.LONG);
+        latLngs.push([lat, lng]);
+
+        // Marcador en el mapa con ID flotante adaptativo
+        const marker = L.marker([lat, lng], { icon: getIconForType(item.TIPO) });
+        
+        // Ventana emergente (Popup) al hacer clic o hover
+        const popupContent = `
+          <div style="font-size: 0.85rem; line-height: 1.4;">
+            <strong style="color: #1e293b; font-size: 0.95rem;">${item.ID}</strong><br/>
+            <b>TIPO:</b> ${item.TIPO || 'N/A'}<br/>
+            <b>NOMBRE LÍNEA:</b> ${item.NOMBRE_LINEA || item.LINEA || 'Línea 2 / Ramal L4'}<br/>
+            <b>PROVINCIA:</b> ${item.PROVINCIA || 'Lima'}<br/>
+            <b>DISTRITO:</b> ${item.DISTRITO || 'N/A'}
+          </div>
+        `;
+        marker.bindPopup(popupContent);
+
+        // Etiqueta de ID permanente discreta junto al icono
+        marker.bindTooltip(item.ID, {
+          permanent: true,
+          direction: 'top',
+          className: 'id-label',
+          offset: [0, -6]
+        });
+
+        markersLayer.addLayer(marker);
+
+        // Fila de la tabla
+        const tr = document.createElement('tr');
+        tr.innerHTML = `
+          <td><b>${item.ID}</b></td>
+          <td>${item.TIPO || ''}</td>
+          <td>${item.NOMBRE_LINEA || item.LINEA || ''}</td>
+          <td>${item.PROVINCIA || ''}</td>
+          <td>${item.DISTRITO || ''}</td>
+        `;
+
+        // Interacción Tabla -> Mapa (Centrar y abrir popup)
+        tr.addEventListener('mouseenter', () => {
+          tr.classList.add('selected');
+          marker.openPopup();
+        });
+        tr.addEventListener('mouseleave', () => {
+          tr.classList.remove('selected');
+          marker.closePopup();
+        });
+        tr.addEventListener('click', () => {
+          map.setView([lat, lng], 16);
+          marker.openPopup();
+        });
+
+        tbody.appendChild(tr);
+      });
+
+      // Zoom out inteligente de las estructuras filtradas
+      if (latLngs.length > 0) {
+        const bounds = L.latLngBounds(latLngs);
+        map.fitBounds(bounds, { padding: [50, 50], maxZoom: 15 });
+      }
+    }
+
+    // Filtros dinámicos
+    function applyFilters() {
+      const query = document.getElementById('searchFilter').value.toLowerCase();
+      const prov = document.getElementById('provinceFilter').value;
+      const dist = document.getElementById('districtFilter').value;
+
+      const filtered = allStructures.filter(item => {
+        const matchQuery = Object.values(item.trim()).some(val => String(val).toLowerCase().includes(query));
+        const matchProv = !prov || item.PROVINCIA === prov;
+        const matchDist = !dist || item.DISTRITO === dist;
+        return matchQuery && matchProv && matchDist;
+      });
+
+      updateDisplay(filtered);
+    }
+
+    document.getElementById('searchFilter').addEventListener('input', applyFilters);
+    document.getElementById('provinceFilter').addEventListener('change', applyFilters);
+    document.getElementById('districtFilter').addEventListener('change', applyFilters);
+
+    // Leyenda inferior derecha
+    const legend = L.control({ position: 'bottomright' });
+    legend.onAdd = function (map) {
+      const div = L.create('div', 'map-legend');
+      div.innerHTML = `
+        <strong>Leyenda - Estructuras</strong>
+        <div class="legend-item"><div class="legend-color" style="background:#2563eb;"></div> Estación / Pozo / Pique</div>
+        <div class="legend-item"><div class="legend-color" style="background:#10b981;"></div> Patio Taller / Ventilación</div>
+      `;
+      return div;
+    };
+    legend.addTo(map);
+  </script>
+</body>
+</html>
