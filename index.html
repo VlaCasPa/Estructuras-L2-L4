@@ -83,19 +83,22 @@
     const map = L.map('map', { zoomControl: false }).setView([-12.0464, -77.0428], 12);
     L.control.zoom({ position: 'topright' }).addTo(map);
 
-    // Fondo: Google Maps
+    // 1. ORDEN CAPA 1: Fondo Google Maps (escala de grises)
     L.tileLayer('https://{s}.google.com/vt/lyrs=m&x={x}&y={y}&z={z}', {
       maxZoom: 20,
       subdomains: ['mt0', 'mt1', 'mt2', 'mt3'],
       attribution: '&copy; Google Maps'
     }).addTo(map);
 
-    let markersLayer = L.layerGroup().addTo(map);
+    // Grupos de capas para respetar la jerarquía exacta
     let polygonsLayer = L.layerGroup().addTo(map);
+    let linesLayer = L.layerGroup().addTo(map);
+    let markersLayer = L.layerGroup().addTo(map);
+
     let allStructures = [];
     let tableRowsMap = new Map();
 
-    // Cargar GeoJSON de Distritos desde la raíz
+    // 2. ORDEN CAPA 2: Polígonos de Distritos
     fetch('DISTRITOS.geojson')
       .then(res => res.json())
       .then(data => {
@@ -132,7 +135,36 @@
       }).addTo(polygonsLayer);
     }
 
-    // Carga de datos CSV con soporte regional en español (comas decimales)
+    // 3. ORDEN CAPA 3: Líneas del Metro (Línea 2 y Línea 4)
+    fetch('LINEAS.geojson')
+      .then(res => res.json())
+      .then(data => {
+        renderLines(data);
+      })
+      .catch(err => console.log("Aviso: El archivo LINEAS.geojson se cargará cuando esté disponible en la raíz."));
+
+    function renderLines(geojson) {
+      linesLayer.clearLayers();
+      L.geoJSON(geojson, {
+        style: function(feature) {
+          const linea = String(feature.properties.LINEA || '').trim();
+          let colorLine = '#1A6B11'; // Verde por defecto
+          if (linea === '4' || linea.includes('4')) {
+            colorLine = '#1C6873'; // Color Línea 4
+          } else if (linea === '2' || linea.includes('2')) {
+            colorLine = '#1A6B11'; // Color Línea 2
+          }
+          return {
+            color: colorLine,
+            weight: 7, // La mitad del círculo del marcador (14px)
+            opacity: 0.9,
+            smoothFactor: 1.2
+          };
+        }
+      }).addTo(linesLayer);
+    }
+
+    // Carga de datos de estructuras CSV
     Papa.parse(SHEET_CSV_URL, {
       download: true,
       header: true,
@@ -189,7 +221,6 @@
     }
 
     function getIconForType(tipo) {
-      // Icono restaurado a su tamaño original destacado
       return L.divIcon({
         className: 'custom-pin',
         html: `<div style="background-color: #2563eb; width: 14px; height: 14px; border: 2.5px solid white; border-radius: 50%; box-shadow: 0 0 6px rgba(0,0,0,0.5);"></div>`,
@@ -197,6 +228,7 @@
       });
     }
 
+    // 4. ORDEN CAPA 4: IDs, Iconos y Nombres de estructuras
     function updateDisplay(data) {
       markersLayer.clearLayers();
       const tbody = document.getElementById('tableBody');
@@ -212,7 +244,7 @@
 
         const marker = L.marker([lat, lng], { icon: getIconForType(item.TIPO) });
         
-        // Ventana emergente con diseño profesional
+        // Ventana emergente profesional con fondo #EDEBEB
         const popupContent = `
           <div class="custom-popup">
             <div class="popup-title">${item.ID}</div>
@@ -224,7 +256,7 @@
         `;
         marker.bindPopup(popupContent);
 
-        // Tooltip muestra ÚNICAMENTE el ID con el tamaño original legible
+        // Tooltip muestra únicamente el ID
         marker.bindTooltip(item.ID, {
           permanent: true,
           direction: 'top',
@@ -296,16 +328,4 @@
     document.getElementById('districtFilter').addEventListener('change', applyFilters);
 
     // Leyenda en la parte inferior derecha
-    const legend = L.control({ position: 'bottomright' });
-    legend.onAdd = function (map) {
-      const div = L.create('div', 'map-legend');
-      div.innerHTML = `
-        <strong>Leyenda - Estructuras</strong>
-        <div class="legend-item"><div class="legend-color" style="background:#2563eb;"></div> Estación / Estructura Principal</div>
-      `;
-      return div;
-    };
-    legend.addTo(map);
-  </script>
-</body>
-</html>
+    const legend = L.control({ position:
