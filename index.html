@@ -13,12 +13,12 @@
 <body>
 
   <div class="app-container">
-    <!-- Mapa (2/3 de la pantalla en web) -->
+    <!-- Mapa (2/3 en web, superior en celular) -->
     <div id="map">
       <div class="author-credit">DISEÑADO POR VLADIMIR CASAS</div>
     </div>
 
-    <!-- Panel de Tabla y Filtros (1/3 de la pantalla en web) -->
+    <!-- Panel de Tabla y Filtros (1/3 en web, inferior en celular) -->
     <div class="sidebar">
       <div class="panel-header">
         <div class="app-title-discreet">Ubicación de las estructuras de la Línea 2 y Ramal L4</div>
@@ -83,10 +83,11 @@
     const map = L.map('map', { zoomControl: false }).setView([-12.0464, -77.0428], 12);
     L.control.zoom({ position: 'topright' }).addTo(map);
 
-    // Capa base estándar de OpenStreetMap (Estilizada a grises por CSS)
-    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-      maxZoom: 19,
-      attribution: '&copy; OpenStreetMap contributors'
+    // Fondo: Google Maps (Google Roadmap Tiles adaptado a escala de grises limpia)
+    L.tileLayer('https://{s}.google.com/vt/lyrs=m&x={x}&y={y}&z={z}', {
+      maxZoom: 20,
+      subdomains: ['mt0', 'mt1', 'mt2', 'mt3'],
+      attribution: '&copy; Google Maps'
     }).addTo(map);
 
     let markersLayer = L.layerGroup().addTo(map);
@@ -110,9 +111,9 @@
           return {
             fillColor: getDistrictColor(distrito),
             weight: 1.5,
-            opacity: 1,
-            color: '#94a3b8',
-            fillOpacity: 0.35
+            opacity: 0.8,
+            color: '#64748b',
+            fillOpacity: 0.25 // Transparente y suave para que se luzca el fondo de Google Maps
           };
         },
         onEachFeature: function(feature, layer) {
@@ -131,14 +132,12 @@
       }).addTo(polygonsLayer);
     }
 
-    // Carga de datos CSV con conversión adecuada para formato regional en español (comas por puntos)
+    // Carga de datos CSV con soporte regional en español (comas decimales)
     Papa.parse(SHEET_CSV_URL, {
       download: true,
       header: true,
       skipEmptyLines: true,
       complete: function(results) {
-        console.log("=== DATOS CSV RECIBIDOS ===", results.data);
-
         allStructures = results.data.map(row => {
           const cleanRow = {};
           Object.keys(row).forEach(key => {
@@ -146,7 +145,6 @@
             cleanRow[cleanKey] = row[key];
           });
 
-          // Obtener valores según los títulos exactos del Excel
           const idVal = cleanRow['ID'] || '';
           const tipoVal = cleanRow['Tipo'] || '';
           const nombreVal = cleanRow['Nombre'] || '';
@@ -154,7 +152,6 @@
           const provVal = cleanRow['Provincia'] || '';
           const distVal = cleanRow['Distrito'] || '';
           
-          // Reemplazo vital: convertir la coma decimal (ej. -11,99855) a punto para que parseFloat funcione
           const rawLat = String(cleanRow['Latitud'] || '0').trim().replace(',', '.');
           const rawLong = String(cleanRow['Longitud'] || '0').trim().replace(',', '.');
 
@@ -170,7 +167,6 @@
           };
         }).filter(item => item.ID !== '' && !isNaN(item.LAT) && !isNaN(item.LONG) && item.LAT !== 0);
 
-        console.log("Estructuras procesadas con éxito:", allStructures);
         populateFilters(allStructures);
         updateDisplay(allStructures);
       },
@@ -195,8 +191,8 @@
     function getIconForType(tipo) {
       return L.divIcon({
         className: 'custom-pin',
-        html: `<div style="background-color: #2563eb; width: 12px; height: 12px; border: 2px solid white; border-radius: 50%; box-shadow: 0 0 4px rgba(0,0,0,0.4);"></div>`,
-        iconSize: [12, 12]
+        html: `<div style="background-color: #2563eb; width: 10px; height: 10px; border: 2px solid white; border-radius: 50%; box-shadow: 0 0 4px rgba(0,0,0,0.4);"></div>`,
+        iconSize: [10, 10]
       });
     }
 
@@ -227,11 +223,12 @@
         `;
         marker.bindPopup(popupContent);
 
-        marker.bindTooltip(item.ID, {
+        // Tooltip con ID y Nombre visible junto al icono
+        marker.bindTooltip(`${item.ID}${item.NOMBRE ? ' - ' + item.NOMBRE : ''}`, {
           permanent: true,
           direction: 'top',
           className: 'id-label',
-          offset: [0, -6]
+          offset: [0, -4]
         });
 
         markersLayer.addLayer(marker);
