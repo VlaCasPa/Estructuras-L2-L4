@@ -83,7 +83,7 @@
     const map = L.map('map', { zoomControl: false }).setView([-12.0464, -77.0428], 12);
     L.control.zoom({ position: 'topright' }).addTo(map);
 
-    // Capa base estándar de OpenStreetMap (Estilizada a grises mediante style.css)
+    // Capa base estándar de OpenStreetMap (Estilizada a grises por CSS)
     L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
       maxZoom: 19,
       attribution: '&copy; OpenStreetMap contributors'
@@ -131,39 +131,53 @@
       }).addTo(polygonsLayer);
     }
 
-    // Carga de datos mediante PapaParse con soporte robusto
+    // Carga de datos CSV ultratolérante con depuración en consola
     Papa.parse(SHEET_CSV_URL, {
       download: true,
       header: true,
       dynamicTyping: true,
       skipEmptyLines: true,
       complete: function(results) {
-        console.log("Datos CSV brutos:", results.data);
-        
+        console.log("=== CSV CARGADO DESDE GOOGLE SHEETS ===", results);
+        if (results.data && results.data.length > 0) {
+          console.log("Cabeceras detectadas:", Object.keys(results.data[0]));
+        }
+
         allStructures = results.data.map(row => {
-          // Normalizar llaves para evitar problemas con mayúsculas o espacios del Excel
           const cleanRow = {};
           Object.keys(row).forEach(key => {
-            cleanRow[key.trim().toUpperCase()] = row[key];
+            // Eliminar BOM invisible y espacios en blanco de las cabeceras
+            const cleanKey = key.replace(/^\uFEFF/, '').trim().toUpperCase();
+            cleanRow[cleanKey] = row[key];
           });
 
-          return {
-            ID: cleanRow['ID'] || cleanRow['CODIGO'] || '',
-            TIPO: cleanRow['TIPO'] || '',
-            NOMBRE_LINEA: cleanRow['NOMBRE LÍNEA'] || cleanRow['NOMBRE_LINEA'] || cleanRow['LINEA'] || 'Línea 2 / Ramal L4',
-            PROVINCIA: cleanRow['PROVINCIA'] || 'LIMA',
-            DISTRITO: cleanRow['DISTRITO'] || '',
-            LAT: parseFloat(cleanRow['LAT'] || cleanRow['LATITUD']),
-            LONG: parseFloat(cleanRow['LONG'] || cleanRow['LONGITUD'] || cleanRow['LNG'] || cleanRow['LON'])
-          };
-        }).filter(item => item.ID && !isNaN(item.LAT) && !isNaN(item.LONG));
+          // Mapeo exhaustivo de campos con múltiples alternativas de nombres
+          const idVal = cleanRow['ID'] || cleanRow['CODIGO'] || cleanRow['ESTRUCTURA'] || cleanRow['ESTACION'] || '';
+          const tipoVal = cleanRow['TIPO'] || cleanRow['TIPO_ESTRUCTURA'] || cleanRow['CATEGORIA'] || 'Estructura';
+          const lineaVal = cleanRow['NOMBRE LÍNEA'] || cleanRow['NOMBRE_LÍNEA'] || cleanRow['NOMBRE_LINEA'] || cleanRow['LINEA'] || 'Línea 2 / Ramal L4';
+          const provVal = cleanRow['PROVINCIA'] || 'LIMA';
+          const distVal = cleanRow['DISTRITO'] || '';
+          
+          const latVal = parseFloat(cleanRow['LAT'] || cleanRow['LATITUD'] || cleanRow['LATITUD (Y)'] || cleanRow['Y']);
+          const longVal = parseFloat(cleanRow['LONG'] || cleanRow['LONGITUD'] || cleanRow['LON'] || cleanRow['LNG'] || cleanRow['LONGITUD (X)'] || cleanRow['X']);
 
-        console.log("Estructuras filtradas y válidas:", allStructures);
+          return {
+            ID: String(idVal).trim(),
+            TIPO: String(tipoVal).trim(),
+            NOMBRE_LINEA: String(lineaVal).trim(),
+            PROVINCIA: String(provVal).trim(),
+            DISTRITO: String(distVal).trim(),
+            LAT: latVal,
+            LONG: longVal
+          };
+        }).filter(item => item.ID !== '' && !isNaN(item.LAT) && !isNaN(item.LONG) && item.LAT !== 0 && item.LONG !== 0);
+
+        console.log("Estructuras válidas procesadas:", allStructures);
         populateFilters(allStructures);
         updateDisplay(allStructures);
       },
       error: function(err) {
-        console.error("Error al procesar el CSV:", err);
+        console.error("Error al descargar el CSV:", err);
       }
     });
 
@@ -172,9 +186,11 @@
       const districts = [...new Set(data.map(item => item.DISTRITO).filter(Boolean))];
 
       const provSelect = document.getElementById('provinceFilter');
+      provSelect.innerHTML = '<option value="">Todas las Provincias</option>';
       provinces.forEach(p => provSelect.innerHTML += `<option value="${p}">${p}</option>`);
 
       const distSelect = document.getElementById('districtFilter');
+      distSelect.innerHTML = '<option value="">Todos los Distritos</option>';
       districts.forEach(d => distSelect.innerHTML += `<option value="${d}">${d}</option>`);
     }
 
@@ -257,7 +273,6 @@
         tbody.appendChild(tr);
       });
 
-      // Zoom out inteligente y ajuste de límites
       if (latLngs.length > 0) {
         const bounds = L.latLngBounds(latLngs);
         map.fitBounds(bounds, { padding: [50, 50], maxZoom: 15 });
