@@ -83,10 +83,10 @@
     const map = L.map('map', { zoomControl: false }).setView([-12.0464, -77.0428], 12);
     L.control.zoom({ position: 'topright' }).addTo(map);
 
-    // Capa base gris suave institucional
-    L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png', {
+    // Capa base estándar de OpenStreetMap (Estilizada a grises por CSS)
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
       maxZoom: 19,
-      attribution: '&copy; OpenStreetMap contributors & CARTO'
+      attribution: '&copy; OpenStreetMap contributors'
     }).addTo(map);
 
     let markersLayer = L.layerGroup().addTo(map);
