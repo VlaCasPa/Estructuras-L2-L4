@@ -42,12 +42,9 @@ body, html {
   z-index: 1000;
 }
 
-/* Capa de Mapa Estilo Gris Suave */
-.leaflet-container {
-  background-color: #f0f0f0 !important;
-}
+/* Filtro de escala de grises y contraste para el mapa base de OpenStreetMap */
 .leaflet-tile-pane {
-  filter: grayscale(100%) contrast(95%) brightness(105%);
+  filter: grayscale(100%) contrast(90%) brightness(108%);
 }
 
 .panel-header {
