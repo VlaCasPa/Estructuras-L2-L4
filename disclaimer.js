@@ -1,6 +1,9 @@
 document.addEventListener("DOMContentLoaded", () => {
+  // Verificamos si el usuario ya aceptó el disclaimer previamente en este navegador
+  if (localStorage.getItem('ccm2l_disclaimer_accepted') === 'true') return;
+
   const disclaimerHTML = `
-    <div id="disclaimerModal" class="modal-overlay">
+    <div id="disclaimerModal" class="modal-overlay" style="z-index: 10005;">
       <div class="modal-card">
         <div class="modal-title">AVISO DE CONFIDENCIALIDAD Y USO RESTRINGIDO</div>
         <div class="modal-text">
@@ -16,6 +19,7 @@ document.addEventListener("DOMContentLoaded", () => {
   document.body.insertAdjacentHTML('beforeend', disclaimerHTML);
 
   document.getElementById('acceptDisclaimer').addEventListener('click', () => {
-    document.getElementById('disclaimerModal').style.display = 'none';
+    localStorage.setItem('ccm2l_disclaimer_accepted', 'true');
+    document.getElementById('disclaimerModal').remove();
   });
 });
