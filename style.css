@@ -15,13 +15,16 @@ body, html {
   width: 100%;
   height: 100vh;
   overflow: hidden;
-  background-color: #f1f5f9;
+  background-color: #e2e8f0;
 }
 
 .app-container {
   display: flex;
   width: 100vw;
   height: 100vh;
+  padding: 8px;
+  gap: 8px; /* Espacio estético y profesional entre mapa y tabla */
+  background-color: #cbd5e1; /* Marco general que enmarca y diferencia los paneles */
 }
 
 #map {
@@ -29,16 +32,22 @@ body, html {
   height: 100%;
   background: #e5e3df;
   position: relative;
+  border-radius: 8px;
+  overflow: hidden;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+  border: 1px solid #94a3b8;
 }
 
 .sidebar {
   flex: 1; /* 1/3 de la pantalla */
   height: 100%;
-  background: #D4D2D2; /* Fondo de la tabla solicitado */
+  background: #D4D2D2; /* Fondo de la tabla */
   display: flex;
   flex-direction: column;
-  border-left: 1px solid #cbd5e1;
-  box-shadow: -2px 0 10px rgba(0,0,0,0.05);
+  border-radius: 8px;
+  overflow: hidden;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+  border: 1px solid #94a3b8;
   z-index: 1000;
 }
 
@@ -49,14 +58,14 @@ body, html {
 
 .panel-header {
   padding: 14px 16px;
-  background: #c8c6c6;
-  border-bottom: 1px solid #b8b5b5;
+  background: #c2c0c0;
+  border-bottom: 1px solid #a8a6a6;
 }
 
 .app-title-discreet {
   font-size: 0.85rem;
-  color: #334155;
-  font-weight: 600;
+  color: #1e293b;
+  font-weight: 700;
   margin-bottom: 8px;
   letter-spacing: -0.2px;
 }
@@ -70,7 +79,7 @@ body, html {
 .filter-input, .filter-select {
   width: 100%;
   padding: 7px 10px;
-  border: 1px solid #94a3b8;
+  border: 1px solid #71717a;
   border-radius: 6px;
   font-size: 0.8rem;
   outline: none;
@@ -96,19 +105,19 @@ body, html {
 }
 
 .data-table th {
-  background: #bcbcbc;
-  color: #1e293b;
+  background: #b5b3b3;
+  color: #0f172a;
   padding: 9px 10px;
   position: sticky;
   top: 0;
   z-index: 10;
-  border-bottom: 1px solid #94a3b8;
+  border-bottom: 1px solid #8e8c8c;
   font-weight: 600;
 }
 
 .data-table td {
   padding: 8px 10px;
-  border-bottom: 1px solid #c8c6c6;
+  border-bottom: 1px solid #c2c0c0;
   color: #1e293b;
   cursor: pointer;
 }
@@ -147,17 +156,18 @@ body, html {
   white-space: nowrap;
 }
 
-/* Estilo profesional para la ventana emergente (Popup) del mapa */
+/* Estilo profesional para la ventana emergente (Popup) con fondo #EDEBEB */
 .leaflet-popup-content-wrapper {
-  background: #A0A7AD !important;
+  background: #EDEBEB !important;
   color: #0f172a !important;
   border-radius: 8px !important;
-  box-shadow: 0 4px 12px rgba(0,0,0,0.25) !important;
+  box-shadow: 0 4px 14px rgba(0,0,0,0.3) !important;
   padding: 4px !important;
+  border: 1px solid #94a3b8 !important;
 }
 
 .leaflet-popup-tip {
-  background: #A0A7AD !important;
+  background: #EDEBEB !important;
 }
 
 .custom-popup {
@@ -170,14 +180,14 @@ body, html {
   font-size: 1rem;
   font-weight: 700;
   color: #0f172a;
-  border-bottom: 1px solid rgba(15, 23, 42, 0.2);
+  border-bottom: 1px solid rgba(15, 23, 42, 0.25);
   padding-bottom: 4px;
   margin-bottom: 6px;
   letter-spacing: 0.3px;
 }
 
 .popup-row {
-  font-size: 0.76rem; /* Letra un poco más pequeña para las filas secundarias */
+  font-size: 0.76rem;
   color: #1e293b;
   margin-bottom: 3px;
 }
@@ -198,6 +208,7 @@ body, html {
   display: flex;
   align-items: center;
   gap: 6px;
+  margin-bottom: 2px;
 }
 
 .legend-color {
@@ -304,7 +315,5 @@ body, html {
   .sidebar {
     flex: 1;
     height: 40vh;
-    border-left: none;
-    border-top: 1px solid #cbd5e1;
   }
 }
