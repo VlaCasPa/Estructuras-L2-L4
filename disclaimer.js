@@ -1,5 +1,4 @@
 document.addEventListener("DOMContentLoaded", () => {
-  // Verificamos si el usuario ya aceptó el disclaimer previamente en este navegador
   if (localStorage.getItem('ccm2l_disclaimer_accepted') === 'true') return;
 
   const disclaimerHTML = `
