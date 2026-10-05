@@ -90,7 +90,7 @@
       attribution: '&copy; Google Maps'
     }).addTo(map);
 
-    // Grupos de capas para respetar la jerarquía exacta
+    // Grupos de capas para respetar la jerarquía exacta solicitada
     let polygonsLayer = L.layerGroup().addTo(map);
     let linesLayer = L.layerGroup().addTo(map);
     let markersLayer = L.layerGroup().addTo(map);
@@ -135,13 +135,13 @@
       }).addTo(polygonsLayer);
     }
 
-    // 3. ORDEN CAPA 3: Líneas del Metro (Línea 2 y Línea 4)
-    fetch('LINEAS.geojson')
+    // 3. ORDEN CAPA 3: Líneas de Metro (Línea 2 y Línea 4 con sus colores y grosores exactos)
+    fetch('Lineas.geojson')
       .then(res => res.json())
       .then(data => {
         renderLines(data);
       })
-      .catch(err => console.log("Aviso: El archivo LINEAS.geojson se cargará cuando esté disponible en la raíz."));
+      .catch(err => console.log("Aviso: El archivo Lineas.geojson se cargará desde la raíz."));
 
     function renderLines(geojson) {
       linesLayer.clearLayers();
@@ -150,13 +150,13 @@
           const linea = String(feature.properties.LINEA || '').trim();
           let colorLine = '#1A6B11'; // Verde por defecto
           if (linea === '4' || linea.includes('4')) {
-            colorLine = '#1C6873'; // Color Línea 4
+            colorLine = '#1C6873'; // Línea 4
           } else if (linea === '2' || linea.includes('2')) {
-            colorLine = '#1A6B11'; // Color Línea 2
+            colorLine = '#1A6B11'; // Línea 2
           }
           return {
             color: colorLine,
-            weight: 7, // La mitad del círculo del marcador (14px)
+            weight: 7, // Grosor equivalente a la mitad del círculo del ID (14px)
             opacity: 0.9,
             smoothFactor: 1.2
           };
@@ -328,4 +328,18 @@
     document.getElementById('districtFilter').addEventListener('change', applyFilters);
 
     // Leyenda en la parte inferior derecha
-    const legend = L.control({ position:
+    const legend = L.control({ position: 'bottomright' });
+    legend.onAdd = function (map) {
+      const div = L.create('div', 'map-legend');
+      div.innerHTML = `
+        <strong>Leyenda - Estructuras</strong>
+        <div class="legend-item"><div class="legend-color" style="background:#2563eb;"></div> Estructura Principal</div>
+        <div class="legend-item"><div class="legend-color" style="background:#1A6B11;"></div> Línea 2</div>
+        <div class="legend-item"><div class="legend-color" style="background:#1C6873;"></div> Línea 4</div>
+      `;
+      return div;
+    };
+    legend.addTo(map);
+  </script>
+</body>
+</html>
