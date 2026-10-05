@@ -131,48 +131,46 @@
       }).addTo(polygonsLayer);
     }
 
-    // Carga de datos CSV ultratolérante con depuración en consola
+    // Carga de datos CSV con conversión adecuada para formato regional en español (comas por puntos)
     Papa.parse(SHEET_CSV_URL, {
       download: true,
       header: true,
-      dynamicTyping: true,
       skipEmptyLines: true,
       complete: function(results) {
-        console.log("=== CSV CARGADO DESDE GOOGLE SHEETS ===", results);
-        if (results.data && results.data.length > 0) {
-          console.log("Cabeceras detectadas:", Object.keys(results.data[0]));
-        }
+        console.log("=== DATOS CSV RECIBIDOS ===", results.data);
 
         allStructures = results.data.map(row => {
           const cleanRow = {};
           Object.keys(row).forEach(key => {
-            // Eliminar BOM invisible y espacios en blanco de las cabeceras
-            const cleanKey = key.replace(/^\uFEFF/, '').trim().toUpperCase();
+            const cleanKey = key.replace(/^\uFEFF/, '').trim();
             cleanRow[cleanKey] = row[key];
           });
 
-          // Mapeo exhaustivo de campos con múltiples alternativas de nombres
-          const idVal = cleanRow['ID'] || cleanRow['CODIGO'] || cleanRow['ESTRUCTURA'] || cleanRow['ESTACION'] || '';
-          const tipoVal = cleanRow['TIPO'] || cleanRow['TIPO_ESTRUCTURA'] || cleanRow['CATEGORIA'] || 'Estructura';
-          const lineaVal = cleanRow['NOMBRE LÍNEA'] || cleanRow['NOMBRE_LÍNEA'] || cleanRow['NOMBRE_LINEA'] || cleanRow['LINEA'] || 'Línea 2 / Ramal L4';
-          const provVal = cleanRow['PROVINCIA'] || 'LIMA';
-          const distVal = cleanRow['DISTRITO'] || '';
+          // Obtener valores según los títulos exactos del Excel
+          const idVal = cleanRow['ID'] || '';
+          const tipoVal = cleanRow['Tipo'] || '';
+          const nombreVal = cleanRow['Nombre'] || '';
+          const lineaVal = cleanRow['Linea'] || '';
+          const provVal = cleanRow['Provincia'] || '';
+          const distVal = cleanRow['Distrito'] || '';
           
-          const latVal = parseFloat(cleanRow['LAT'] || cleanRow['LATITUD'] || cleanRow['LATITUD (Y)'] || cleanRow['Y']);
-          const longVal = parseFloat(cleanRow['LONG'] || cleanRow['LONGITUD'] || cleanRow['LON'] || cleanRow['LNG'] || cleanRow['LONGITUD (X)'] || cleanRow['X']);
+          // Reemplazo vital: convertir la coma decimal (ej. -11,99855) a punto para que parseFloat funcione
+          const rawLat = String(cleanRow['Latitud'] || '0').trim().replace(',', '.');
+          const rawLong = String(cleanRow['Longitud'] || '0').trim().replace(',', '.');
 
           return {
             ID: String(idVal).trim(),
             TIPO: String(tipoVal).trim(),
-            NOMBRE_LINEA: String(lineaVal).trim(),
+            NOMBRE: String(nombreVal).trim(),
+            LINEA: String(lineaVal).trim(),
             PROVINCIA: String(provVal).trim(),
             DISTRITO: String(distVal).trim(),
-            LAT: latVal,
-            LONG: longVal
+            LAT: parseFloat(rawLat),
+            LONG: parseFloat(rawLong)
           };
-        }).filter(item => item.ID !== '' && !isNaN(item.LAT) && !isNaN(item.LONG) && item.LAT !== 0 && item.LONG !== 0);
+        }).filter(item => item.ID !== '' && !isNaN(item.LAT) && !isNaN(item.LONG) && item.LAT !== 0);
 
-        console.log("Estructuras válidas procesadas:", allStructures);
+        console.log("Estructuras procesadas con éxito:", allStructures);
         populateFilters(allStructures);
         updateDisplay(allStructures);
       },
@@ -221,8 +219,9 @@
           <div style="font-size: 0.85rem; line-height: 1.4;">
             <strong style="color: #1e293b; font-size: 0.95rem;">${item.ID}</strong><br/>
             <b>TIPO:</b> ${item.TIPO || 'N/A'}<br/>
-            <b>NOMBRE LÍNEA:</b> ${item.NOMBRE_LINEA}<br/>
-            <b>PROVINCIA:</b> ${item.PROVINCIA}<br/>
+            <b>NOMBRE:</b> ${item.NOMBRE || 'N/A'}<br/>
+            <b>LÍNEA:</b> ${item.LINEA || 'N/A'}<br/>
+            <b>PROVINCIA:</b> ${item.PROVINCIA || 'N/A'}<br/>
             <b>DISTRITO:</b> ${item.DISTRITO || 'N/A'}
           </div>
         `;
@@ -237,13 +236,13 @@
 
         markersLayer.addLayer(marker);
 
-        // Fila de la tabla
+        // Fila de la tabla con las columnas solicitadas
         const tr = document.createElement('tr');
         tr.innerHTML = `
           <td><b>${item.ID}</b></td>
           <td>${item.TIPO || ''}</td>
-          <td>${item.NOMBRE_LINEA}</td>
-          <td>${item.PROVINCIA}</td>
+          <td>${item.LINEA || ''}</td>
+          <td>${item.PROVINCIA || ''}</td>
           <td>${item.DISTRITO || ''}</td>
         `;
 
