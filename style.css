@@ -23,8 +23,8 @@ body, html {
   width: 100vw;
   height: 100vh;
   padding: 8px;
-  gap: 8px; /* Espacio estético y profesional entre mapa y tabla */
-  background-color: #cbd5e1; /* Marco general que enmarca y diferencia los paneles */
+  gap: 8px;
+  background-color: #cbd5e1; /* Marco general que enmarca y diferencia mapa y tabla */
 }
 
 #map {
@@ -143,7 +143,7 @@ body, html {
   pointer-events: none;
 }
 
-/* Etiqueta flotante de ID (Tamaño original legible, solo ID) */
+/* Etiqueta flotante de ID */
 .id-label {
   background: rgba(255, 255, 255, 0.95);
   border: 1px solid #475569;
