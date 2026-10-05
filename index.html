@@ -83,7 +83,7 @@
     const map = L.map('map', { zoomControl: false }).setView([-12.0464, -77.0428], 12);
     L.control.zoom({ position: 'topright' }).addTo(map);
 
-    // Capa base estándar de OpenStreetMap (Estilizada a grises por CSS)
+    // Capa base estándar de OpenStreetMap (Estilizada a grises mediante style.css)
     L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
       maxZoom: 19,
       attribution: '&copy; OpenStreetMap contributors'
@@ -131,37 +131,39 @@
       }).addTo(polygonsLayer);
     }
 
-    // Cargar Datos del CSV de Google Sheets con detección flexible de columnas
+    // Carga de datos mediante PapaParse con soporte robusto
     Papa.parse(SHEET_CSV_URL, {
       download: true,
       header: true,
+      dynamicTyping: true,
       skipEmptyLines: true,
       complete: function(results) {
-        console.log("Datos CSV cargados:", results.data);
+        console.log("Datos CSV brutos:", results.data);
         
         allStructures = results.data.map(row => {
-          // Normalizar las claves del objeto para evitar problemas de mayúsculas/minúsculas o espacios
-          const normalized = {};
-          for (let key in row) {
-            if (row.hasOwnProperty(key)) {
-              normalized[key.trim().toUpperCase()] = row[key];
-            }
-          }
-          
-          return {
-            ID: normalized.ID || normalized.ESTRUCTURA || normalized.CODIGO || '',
-            TIPO: normalized.TIPO || normalized.TIPO_ESTRUCTURA || '',
-            NOMBRE_LINEA: normalized.NOMBRE_LINEA || normalized.LINEA || normalized.NOMBRE || '',
-            PROVINCIA: normalized.PROVINCIA || 'LIMA',
-            DISTRITO: normalized.DISTRITO || '',
-            LAT: parseFloat(normalized.LAT || normalized.LATITUD || 0),
-            LONG: parseFloat(normalized.LONG || normalized.LONGITUD || normalized.LON || normalized.LNG || 0)
-          };
-        }).filter(item => item.ID && !isNaN(item.LAT) && !isNaN(item.LONG) && item.LAT !== 0);
+          // Normalizar llaves para evitar problemas con mayúsculas o espacios del Excel
+          const cleanRow = {};
+          Object.keys(row).forEach(key => {
+            cleanRow[key.trim().toUpperCase()] = row[key];
+          });
 
-        console.log("Estructuras procesadas válidas:", allStructures);
+          return {
+            ID: cleanRow['ID'] || cleanRow['CODIGO'] || '',
+            TIPO: cleanRow['TIPO'] || '',
+            NOMBRE_LINEA: cleanRow['NOMBRE LÍNEA'] || cleanRow['NOMBRE_LINEA'] || cleanRow['LINEA'] || 'Línea 2 / Ramal L4',
+            PROVINCIA: cleanRow['PROVINCIA'] || 'LIMA',
+            DISTRITO: cleanRow['DISTRITO'] || '',
+            LAT: parseFloat(cleanRow['LAT'] || cleanRow['LATITUD']),
+            LONG: parseFloat(cleanRow['LONG'] || cleanRow['LONGITUD'] || cleanRow['LNG'] || cleanRow['LON'])
+          };
+        }).filter(item => item.ID && !isNaN(item.LAT) && !isNaN(item.LONG));
+
+        console.log("Estructuras filtradas y válidas:", allStructures);
         populateFilters(allStructures);
         updateDisplay(allStructures);
+      },
+      error: function(err) {
+        console.error("Error al procesar el CSV:", err);
       }
     });
 
@@ -203,8 +205,8 @@
           <div style="font-size: 0.85rem; line-height: 1.4;">
             <strong style="color: #1e293b; font-size: 0.95rem;">${item.ID}</strong><br/>
             <b>TIPO:</b> ${item.TIPO || 'N/A'}<br/>
-            <b>NOMBRE LÍNEA:</b> ${item.NOMBRE_LINEA || 'Línea 2 / Ramal L4'}<br/>
-            <b>PROVINCIA:</b> ${item.PROVINCIA || 'Lima'}<br/>
+            <b>NOMBRE LÍNEA:</b> ${item.NOMBRE_LINEA}<br/>
+            <b>PROVINCIA:</b> ${item.PROVINCIA}<br/>
             <b>DISTRITO:</b> ${item.DISTRITO || 'N/A'}
           </div>
         `;
@@ -224,12 +226,12 @@
         tr.innerHTML = `
           <td><b>${item.ID}</b></td>
           <td>${item.TIPO || ''}</td>
-          <td>${item.NOMBRE_LINEA || ''}</td>
-          <td>${item.PROVINCIA || ''}</td>
+          <td>${item.NOMBRE_LINEA}</td>
+          <td>${item.PROVINCIA}</td>
           <td>${item.DISTRITO || ''}</td>
         `;
 
-        // Interacción Tabla <-> Mapa
+        // Interacción bidireccional Tabla <-> Mapa
         tr.addEventListener('mouseenter', () => {
           tr.classList.add('selected');
           marker.openPopup();
@@ -255,7 +257,7 @@
         tbody.appendChild(tr);
       });
 
-      // Zoom out inteligente de las estructuras filtradas
+      // Zoom out inteligente y ajuste de límites
       if (latLngs.length > 0) {
         const bounds = L.latLngBounds(latLngs);
         map.fitBounds(bounds, { padding: [50, 50], maxZoom: 15 });
