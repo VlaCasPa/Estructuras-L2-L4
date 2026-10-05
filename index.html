@@ -83,7 +83,7 @@
     const map = L.map('map', { zoomControl: false }).setView([-12.0464, -77.0428], 12);
     L.control.zoom({ position: 'topright' }).addTo(map);
 
-    // Fondo: Google Maps (Google Roadmap Tiles adaptado a escala de grises limpia)
+    // Fondo: Google Maps
     L.tileLayer('https://{s}.google.com/vt/lyrs=m&x={x}&y={y}&z={z}', {
       maxZoom: 20,
       subdomains: ['mt0', 'mt1', 'mt2', 'mt3'],
@@ -113,7 +113,7 @@
             weight: 1.5,
             opacity: 0.8,
             color: '#64748b',
-            fillOpacity: 0.25 // Transparente y suave para que se luzca el fondo de Google Maps
+            fillOpacity: 0.25
           };
         },
         onEachFeature: function(feature, layer) {
@@ -189,10 +189,11 @@
     }
 
     function getIconForType(tipo) {
+      // Icono restaurado a su tamaño original destacado
       return L.divIcon({
         className: 'custom-pin',
-        html: `<div style="background-color: #2563eb; width: 10px; height: 10px; border: 2px solid white; border-radius: 50%; box-shadow: 0 0 4px rgba(0,0,0,0.4);"></div>`,
-        iconSize: [10, 10]
+        html: `<div style="background-color: #2563eb; width: 14px; height: 14px; border: 2.5px solid white; border-radius: 50%; box-shadow: 0 0 6px rgba(0,0,0,0.5);"></div>`,
+        iconSize: [14, 14]
       });
     }
 
@@ -211,29 +212,29 @@
 
         const marker = L.marker([lat, lng], { icon: getIconForType(item.TIPO) });
         
+        // Ventana emergente con diseño profesional
         const popupContent = `
-          <div style="font-size: 0.85rem; line-height: 1.4;">
-            <strong style="color: #1e293b; font-size: 0.95rem;">${item.ID}</strong><br/>
-            <b>TIPO:</b> ${item.TIPO || 'N/A'}<br/>
-            <b>NOMBRE:</b> ${item.NOMBRE || 'N/A'}<br/>
-            <b>LÍNEA:</b> ${item.LINEA || 'N/A'}<br/>
-            <b>PROVINCIA:</b> ${item.PROVINCIA || 'N/A'}<br/>
-            <b>DISTRITO:</b> ${item.DISTRITO || 'N/A'}
+          <div class="custom-popup">
+            <div class="popup-title">${item.ID}</div>
+            <div class="popup-row"><b>TIPO:</b> ${item.TIPO || 'N/A'}</div>
+            <div class="popup-row"><b>NOMBRE LÍNEA:</b> ${item.LINEA || 'N/A'}</div>
+            <div class="popup-row"><b>PROVINCIA:</b> ${item.PROVINCIA || 'N/A'}</div>
+            <div class="popup-row"><b>DISTRITO:</b> ${item.DISTRITO || 'N/A'}</div>
           </div>
         `;
         marker.bindPopup(popupContent);
 
-        // Tooltip con ID y Nombre visible junto al icono
-        marker.bindTooltip(`${item.ID}${item.NOMBRE ? ' - ' + item.NOMBRE : ''}`, {
+        // Tooltip muestra ÚNICAMENTE el ID con el tamaño original legible
+        marker.bindTooltip(item.ID, {
           permanent: true,
           direction: 'top',
           className: 'id-label',
-          offset: [0, -4]
+          offset: [0, -6]
         });
 
         markersLayer.addLayer(marker);
 
-        // Fila de la tabla con las columnas solicitadas
+        // Fila de la tabla
         const tr = document.createElement('tr');
         tr.innerHTML = `
           <td><b>${item.ID}</b></td>
