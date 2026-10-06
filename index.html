@@ -135,7 +135,7 @@
       }).addTo(polygonsLayer);
     }
 
-    // 3. ORDEN CAPA 3: Líneas de Metro (Línea 2 y Línea 4 con sus colores y grosores exactos)
+    // 3. ORDEN CAPA 3: Líneas de Metro (Línea 2 y Línea 4)
     fetch('Lineas.geojson')
       .then(res => res.json())
       .then(data => {
@@ -327,10 +327,10 @@
     document.getElementById('provinceFilter').addEventListener('change', applyFilters);
     document.getElementById('districtFilter').addEventListener('change', applyFilters);
 
-    // Leyenda en la parte inferior derecha
+    // Leyenda corregida utilizando L.DomUtil.create para su correcta visualización en web y celular
     const legend = L.control({ position: 'bottomright' });
     legend.onAdd = function (map) {
-      const div = L.create('div', 'map-legend');
+      const div = L.DomUtil.create('div', 'map-legend');
       div.innerHTML = `
         <strong>Leyenda - Estructuras</strong>
         <div class="legend-item"><div class="legend-color" style="background:#2563eb;"></div> Estructura Principal</div>
