@@ -58,31 +58,31 @@ body, html {
 
 /* Sección de filtros con color diferenciado */
 .panel-header {
-  padding: 10px 12px;
+  padding: 8px 10px;
   background: #b8b6b6; 
   border-bottom: 1px solid #9e9c9c;
 }
 
 .app-title-discreet {
-  font-size: 0.78rem;
+  font-size: 0.75rem;
   color: #1e293b;
   font-weight: 700;
-  margin-bottom: 6px;
+  margin-bottom: 4px;
   letter-spacing: -0.2px;
 }
 
 .filters-container {
   display: flex;
   flex-direction: column;
-  gap: 6px;
+  gap: 5px;
 }
 
 .filter-input, .filter-select {
   width: 100%;
-  padding: 6px 8px;
+  padding: 5px 8px;
   border: 1px solid #64748b;
   border-radius: 5px;
-  font-size: 0.75rem;
+  font-size: 0.72rem;
   outline: none;
   background: #ffffff;
   transition: border-color 0.2s;
@@ -92,9 +92,9 @@ body, html {
   border-color: var(--accent-color);
 }
 
-/* Espacio de la tabla limitado a 4 filas con scroll */
+/* Espacio de la tabla optimizado para 5 filas compactas con scroll */
 .table-container {
-  max-height: 155px; /* Altura exacta para 4 filas + cabecera */
+  max-height: 155px; /* Altura ajustada para alojar 5 filas perfectamente */
   overflow-y: auto;
   padding: 0;
   background: #D4D2D2;
@@ -105,14 +105,14 @@ body, html {
   width: 100%;
   border-collapse: collapse;
   text-align: left;
-  font-size: 0.72rem; /* Letras reducidas un punto */
+  font-size: 0.68rem; /* Letras más pequeñas para ganar filas */
 }
 
 /* Títulos de las columnas con color diferenciado */
 .data-table th {
   background: #8c95a1 !important;
   color: #ffffff;
-  padding: 7px 8px;
+  padding: 5px 6px;
   position: sticky;
   top: 0;
   z-index: 10;
@@ -123,7 +123,7 @@ body, html {
 }
 
 .data-table td {
-  padding: 6px 8px;
+  padding: 4px 6px; /* Filas más compactas para dar cabida a 5 filas */
   border-bottom: 1px solid #c2c0c0;
   color: #1e293b;
   cursor: pointer;
@@ -197,47 +197,50 @@ body, html {
   margin-bottom: 2px;
 }
 
-/* Leyenda optimizada para web y celular */
+/* Leyenda optimizada y separada del marco de la foto en celular */
 .map-legend {
-  background: rgba(255, 255, 255, 0.95);
-  padding: 6px 8px;
+  background: rgba(255, 255, 255, 0.98);
+  padding: 5px 7px;
   border-radius: 5px;
-  box-shadow: 0 2px 5px rgba(0,0,0,0.15);
-  line-height: 1.3;
-  font-size: 0.68rem;
+  box-shadow: 0 2px 6px rgba(0,0,0,0.2);
+  line-height: 1.25;
+  font-size: 0.65rem;
   color: #334155;
-  margin-bottom: 20px !important;
-  margin-right: 8px !important;
+  margin-bottom: 18px !important;
+  margin-right: 12px !important;
+  border: 1px solid #94a3b8;
+  z-index: 1000;
 }
 
 .legend-item {
   display: flex;
   align-items: center;
-  gap: 5px;
+  gap: 4px;
   margin-bottom: 2px;
+  white-space: nowrap;
 }
 
 .legend-color {
-  width: 10px;
-  height: 10px;
+  width: 9px;
+  height: 9px;
   border-radius: 2px;
 }
 
-/* Marca de agua reubicada al lado inferior izquierdo */
+/* Marca de agua claramente visible en la esquina inferior izquierda */
 .author-credit {
   position: absolute;
-  bottom: 8px;
-  left: 8px;
-  background: rgba(255, 255, 255, 0.95);
-  padding: 3px 6px;
-  font-size: 9px;
+  bottom: 12px;
+  left: 12px;
+  background: rgba(255, 255, 255, 0.98);
+  padding: 4px 8px;
+  font-size: 9.5px;
   font-weight: 700;
-  color: #475569;
+  color: #1e293b;
   border-radius: 4px;
-  box-shadow: 0 1px 3px rgba(0,0,0,0.1);
-  z-index: 1000;
+  box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+  z-index: 1500; /* Prioridad alta para que nunca quede oculta */
   letter-spacing: 0.4px;
-  border: 1px solid #cbd5e1;
+  border: 1px solid #64748b;
 }
 
 .modal-overlay {
@@ -313,12 +316,12 @@ body, html {
   background: #f8fafc;
 }
 
-/* Optimización para Celular: la tabla ocupa solo 4 filas con scroll arriba, dejando el resto para el mapa */
+/* Optimización para Celular: Panel superior compacto permitiendo 5 filas en la tabla y mapa expandido */
 @media (max-width: 768px) {
   .app-container {
     flex-direction: column-reverse;
-    padding: 4px;
-    gap: 4px;
+    padding: 3px;
+    gap: 3px;
   }
   #map {
     flex: 2;
@@ -327,9 +330,9 @@ body, html {
   .sidebar {
     flex: 0 0 auto;
     height: auto;
-    max-height: 230px; /* Limita el panel superior en celular para dar máximo espacio al mapa */
+    max-height: 200px; /* Panel superior más compacto en móvil para dar mayor espacio vertical al mapa */
   }
   .table-container {
-    max-height: 120px; /* Asegura visualización de ~4 filas con desplazamiento en móvil */
+    max-height: 110px; /* Ajustado exactamente para visualizar 5 filas compactas con desplazamiento */
   }
 }
