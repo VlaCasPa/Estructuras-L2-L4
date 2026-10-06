@@ -13,12 +13,12 @@
 <body>
 
   <div class="app-container">
-    <!-- Mapa (Gana máxima expansión vertical) -->
+    <!-- Mapa (2/3 en web, superior en celular) -->
     <div id="map">
-      <div class="author-credit">DISEÑADO POR VLADIMIR CASAS</div>
+      <div class="author-credit">Diseñado por Vladimir Casas</div>
     </div>
 
-    <!-- Panel de Tabla y Filtros (Compacto, 5 filas visibles con scroll) -->
+    <!-- Panel de Tabla y Filtros (1/3 en web, superior compacto en celular) -->
     <div class="sidebar">
       <div class="panel-header">
         <div class="app-title-discreet">Ubicación de las estructuras de la Línea 2 y Ramal L4</div>
@@ -90,7 +90,7 @@
       attribution: '&copy; Google Maps'
     }).addTo(map);
 
-    // Grupos de capas respetando la jerarquía exacta
+    // Grupos de capas respetando la jerarquía exacta solicitada
     let polygonsLayer = L.layerGroup().addTo(map);
     let linesLayer = L.layerGroup().addTo(map);
     let markersLayer = L.layerGroup().addTo(map);
@@ -228,7 +228,7 @@
       });
     }
 
-    // CAPA 4: IDs, Iconos y Nombres de estructuras
+    // CAPA 4: IDs, Iconos y Sincronización Bidireccional
     function updateDisplay(data) {
       markersLayer.clearLayers();
       const tbody = document.getElementById('tableBody');
@@ -273,6 +273,7 @@
           <td>${item.DISTRITO || ''}</td>
         `;
 
+        // Sincronización Tabla <-> Mapa (Hover y Click)
         tr.addEventListener('mouseenter', () => {
           tr.classList.add('selected');
           marker.openPopup();
@@ -285,6 +286,14 @@
         tr.addEventListener('click', () => {
           map.setView([lat, lng], 16);
           marker.openPopup();
+        });
+
+        // Sincronización Mapa -> Tabla (al picar el marcador en el mapa)
+        marker.on('click', () => {
+          // Limpiar selecciones previas en la tabla
+          document.querySelectorAll('.data-table tr').forEach(row => row.classList.remove('selected'));
+          tr.classList.add('selected');
+          tr.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
         });
 
         marker.on('mouseover', () => {
