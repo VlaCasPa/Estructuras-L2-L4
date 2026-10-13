@@ -60,6 +60,7 @@ body, html {
   padding: 12px 14px;
   background: #b8b6b6; 
   border-bottom: 1px solid #9e9c9c;
+  flex-shrink: 0;
 }
 
 .app-title-discreet {
@@ -315,24 +316,25 @@ body, html {
   background: #f8fafc;
 }
 
-/* Versión Celular: Mapa expandido y panel superior optimizado para mostrar más filas en la tabla */
+/* Versión Celular Optimizada (Referencia exacta solicitada) */
 @media (max-width: 768px) {
   .app-container {
-    flex-direction: column-reverse;
+    flex-direction: column;
     padding: 4px;
     gap: 4px;
   }
   #map {
     flex: 2;
     height: auto;
+    min-height: 55vh;
   }
   .sidebar {
-    flex: 0 0 auto;
+    flex: 1;
     height: auto;
-    max-height: 245px; 
+    max-height: 40vh; 
   }
   .table-container {
-    max-height: 135px;
+    max-height: calc(40vh - 85px);
   }
   .data-table {
     font-size: 0.68rem;
@@ -346,9 +348,9 @@ body, html {
     font-size: 8.5px;
     padding: 3px 6px;
   }
-  /* Ajuste responsivo exclusivo para que la leyenda suba y no aparezca cortada en móviles */
+  /* Leyenda elevada en celular para evitar que se corte */
   .map-legend {
-    margin-bottom: 38px !important;
+    margin-bottom: 35px !important;
     margin-right: 8px !important;
     font-size: 0.65rem;
     padding: 6px 8px;
