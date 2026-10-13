@@ -206,7 +206,7 @@ body, html {
   line-height: 1.35;
   font-size: 0.72rem;
   color: #334155;
-  margin-bottom: 25px !important; /* Subido para evitar que toque el borde inferior en web */
+  margin-bottom: 25px !important;
   margin-right: 12px !important;
   border: 1px solid #94a3b8;
   z-index: 1000;
@@ -315,13 +315,13 @@ body, html {
   background: #f8fafc;
 }
 
+/* Versión Celular: Mapa expandido y panel superior optimizado para mostrar más filas en la tabla */
 @media (max-width: 768px) {
-  /* ... otros estilos existentes ... */
-  .map-legend {
-    margin-bottom: 45px !important; /* Aumentado en versión celular para subir la leyenda y evitar el corte */
-    margin-right: 8px !important;
+  .app-container {
+    flex-direction: column-reverse;
+    padding: 4px;
+    gap: 4px;
   }
-}
   #map {
     flex: 2;
     height: auto;
@@ -346,8 +346,11 @@ body, html {
     font-size: 8.5px;
     padding: 3px 6px;
   }
+  /* Ajuste responsivo exclusivo para que la leyenda suba y no aparezca cortada en móviles */
   .map-legend {
-    margin-bottom: 15px !important;
+    margin-bottom: 38px !important;
     margin-right: 8px !important;
+    font-size: 0.65rem;
+    padding: 6px 8px;
   }
 }
