@@ -1,44 +1,442 @@
+// --- CONFIGURACIÓN DE FIREBASE (PROYECTO CENTRAL: MetroL2-IAM-Central) ---
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
+import { getAuth, signInWithPopup, GoogleAuthProvider, signInWithEmailAndPassword, onAuthStateChanged, signOut, setPersistence, browserLocalPersistence } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
+import { getFirestore, doc, getDoc, setDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+
+const firebaseConfig = {
+    apiKey: "AIzaSyC1XakVAZLUDq3-240Q_KoYYPU5JKCTjzs",
+    authDomain: "metrol2-iam-central.firebaseapp.com",
+    projectId: "metrol2-iam-central",
+    storageBucket: "metrol2-iam-central.firebasestorage.app",
+    messagingSenderId: "78845391762",
+    appId: "1:78845391762:web:d64611cd7c4ef65a24074b"
+};
+
+const app = initializeApp(firebaseConfig);
+const auth = getAuth(app);
+const db = getFirestore(app);
+const googleProvider = new GoogleAuthProvider();
+
+const REPO_ACTUAL = "Estructuras-L2-L4";
+const STORAGE_KEY_DISCLAIMER = "ccm2l_estructuras_l2_l4_disclaimer_accepted_v1";
+let usuarioActualGlobal = null;
+
+setPersistence(auth, browserLocalPersistence).catch(console.warn);
+
+// Control de flujo inicial al cargar la página
 document.addEventListener("DOMContentLoaded", () => {
-  if (sessionStorage.getItem('ccm2l_authenticated') === 'true') return;
+    onAuthStateChanged(auth, async (user) => {
+        if (user) {
+            usuarioActualGlobal = user;
+            ocultarModalLogin();
+            await validarPermisosYDisclaimer(user);
+        } else {
+            mostrarModalLogin();
+        }
+    });
 
-  const authHTML = `
-    <div id="authModal" class="modal-overlay" style="z-index: 10000;">
-      <div class="modal-card" style="text-align: center;">
-        <div class="modal-title">CONTROL DE ACCESO INSTITUCIONAL</div>
-        <div class="modal-text" style="text-align: center;">
-          Acceso exclusivo para personal del <strong>Consorcio Constructor Metro 2 de Lima (CCM2L)</strong>.
-        </div>
-        <div style="margin-bottom: 12px;">
-          <input type="email" id="corpEmail" placeholder="usuario@ccmetrolima.com" class="filter-input" style="text-align: center; margin-bottom: 8px;" />
-          <button id="btnCorpLogin" class="modal-btn">Validar Dominio Corporativo</button>
-        </div>
-        <div style="border-top: 1px solid #334155; padding-top: 10px; margin-top: 10px;">
-          <span style="font-size: 0.75rem; color: #94a3b8; display: block; margin-bottom: 6px;">O autentíquese con su cuenta corporativa Google:</span>
-          <button id="btnGoogleLogin" class="modal-btn google-btn">
-            <svg width="18" height="18" viewBox="0 0 24 24"><path fill="#4285F4" d="M23.745 12.27c0-.7-.06-1.4-.19-2.07H12v4.51h6.6c-.29 1.52-1.14 2.82-2.4 3.68v3.05h3.88c2.27-2.09 3.66-5.17 3.66-9.17z"/><path fill="#34A853" d="M12 24c3.24 0 5.95-1.08 7.93-2.91l-3.88-3.05c-1.08.72-2.45 1.16-4.05 1.16-3.12 0-5.77-2.1-6.72-4.93H1.2v3.15C3.16 21.32 7.22 24 12 24z"/><path fill="#FBBC05" d="M5.28 14.27c-.25-.72-.38-1.49-.38-2.27s.13-1.55.38-2.27V6.58H1.2C.44 8.13 0 9.99 0 12s.44 3.87 1.2 5.42l4.08-3.15z"/><path fill="#EA4335" d="M12 4.75c1.77 0 3.35.61 4.6 1.8l3.42-3.42C17.95 1.19 15.24 0 12 0 7.22 0 3.16 2.68 1.2 6.58l4.08 3.15c.95-2.83 3.6-4.98 6.72-4.98z"/></svg>
-            Acceder con Cuenta Google
-          </button>
-        </div>
-        <div id="authError" style="color: #f87171; font-size: 0.75rem; margin-top: 8px; display: none;"></div>
-      </div>
-    </div>
-  `;
-  document.body.insertAdjacentHTML('beforeend', authHTML);
-
-  document.getElementById('btnCorpLogin').addEventListener('click', () => {
-    const email = document.getElementById('corpEmail').value.trim().toLowerCase();
-    const errorDiv = document.getElementById('authError');
-    if (email.endsWith('@ccmetrolima.com')) {
-      sessionStorage.setItem('ccm2l_authenticated', 'true');
-      document.getElementById('authModal').remove();
-    } else {
-      errorDiv.innerText = "Acceso denegado. Debe utilizar un correo @ccmetrolima.com";
-      errorDiv.style.display = 'block';
-    }
-  });
-
-  document.getElementById('btnGoogleLogin').addEventListener('click', () => {
-    sessionStorage.setItem('ccm2l_authenticated', 'true');
-    document.getElementById('authModal').remove();
-  });
+    inicializarAplicacionMapa();
 });
+
+// Funciones globales de Autenticación
+window.loginConGoogle = async function() {
+    try {
+        await signInWithPopup(auth, googleProvider);
+    } catch (err) {
+        console.error("Error en Google Auth:", err);
+        alert("No se pudo completar el inicio de sesión con Google.");
+    }
+};
+
+window.loginConCorreoPassword = async function() {
+    const email = document.getElementById('login-email').value.trim();
+    const password = document.getElementById('login-password').value.trim();
+
+    if (!email || !password) {
+        alert("Por favor ingrese su correo corporativo y contraseña.");
+        return;
+    }
+
+    try {
+        await signInWithEmailAndPassword(auth, email, password);
+    } catch (err) {
+        console.error("Error en Login corporativo:", err);
+        alert("Credenciales incorrectas o usuario no registrado.");
+    }
+};
+
+function mostrarModalLogin() {
+    const modal = document.getElementById('login-modal');
+    if (modal) modal.style.display = 'flex';
+}
+
+function ocultarModalLogin() {
+    const modal = document.getElementById('login-modal');
+    if (modal) modal.style.display = 'none';
+}
+
+// Validación de Permisos y Disclaimer en Firestore
+async function validarPermisosYDisclaimer(user) {
+    const emailUser = user.email.toLowerCase().trim();
+
+    // Resguardo absoluto inmediato para superadministradores
+    if (emailUser === "zebaxx@gmail.com" || emailUser === "vcasasp@ccmetrolima.com" || emailUser === "permisosccm2l@gmail.com" || emailUser === "tnoriega.arq@gmail.com") {
+        verificarDisclaimerUsuario();
+        return;
+    }
+
+    try {
+        const docRef = doc(db, "usuarios", emailUser);
+        const docSnap = await getDoc(docRef);
+
+        if (docSnap.exists()) {
+            const datosUsuario = docSnap.data();
+            const esAdmin = datosUsuario.es_admin || false;
+            const reposPermitidos = datosUsuario.repositorios_permitidos || datosUsuario.permisos_escritura || [];
+
+            let usuarioAutorizado = (esAdmin || reposPermitidos.includes("todos") || reposPermitidos.includes(REPO_ACTUAL));
+
+            if (usuarioAutorizado) {
+                verificarDisclaimerUsuario();
+            } else {
+                restringirAccesoNoAutorizado();
+            }
+        } else {
+            restringirAccesoNoAutorizado();
+        }
+    } catch (error) {
+        console.error("Error al validar contra Firestore:", error);
+        if (emailUser === "zebaxx@gmail.com" || emailUser === "vcasasp@ccmetrolima.com") {
+            verificarDisclaimerUsuario();
+        } else {
+            restringirAccesoNoAutorizado();
+        }
+    }
+}
+
+function verificarDisclaimerUsuario() {
+    if (!localStorage.getItem(STORAGE_KEY_DISCLAIMER)) {
+        mostrarDisclaimer();
+    } else {
+        ocultarDisclaimer();
+    }
+}
+
+async function restringirAccesoNoAutorizado() {
+    alert("No cuenta con autorización para acceder a este repositorio. Consulte con el administrador.");
+    await signOut(auth);
+    window.location.href = "https://github.com";
+}
+
+function mostrarDisclaimer() {
+    const modal = document.getElementById('disclaimer-modal');
+    if (modal) modal.style.display = 'flex';
+}
+
+function ocultarDisclaimer() {
+    const modal = document.getElementById('disclaimer-modal');
+    if (modal) {
+        modal.style.opacity = '0';
+        modal.style.transition = 'opacity 0.3s ease';
+        setTimeout(() => { modal.style.display = 'none'; }, 300);
+    }
+}
+
+window.aceptarDisclaimer = async function() {
+    if (!usuarioActualGlobal) return;
+    const emailUser = usuarioActualGlobal.email.toLowerCase().trim();
+    localStorage.setItem(STORAGE_KEY_DISCLAIMER, "true");
+
+    try {
+        const discRef = doc(db, "aceptaciones_disclaimer", emailUser);
+        await setDoc(discRef, {
+            email: emailUser,
+            aceptado: true,
+            repositorio: REPO_ACTUAL,
+            fecha_aceptacion: serverTimestamp(),
+            dispositivo: navigator.userAgent
+        }, { merge: true });
+
+        ocultarDisclaimer();
+    } catch (err) {
+        console.error("Error al registrar aceptación en Firestore:", err);
+        ocultarDisclaimer();
+    }
+};
+
+// --- LÓGICA ORIGINAL DE MAPA Y ESTRUCTURAS ---
+function inicializarAplicacionMapa() {
+    const SHEET_CSV_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vQOJZ3-HTVbEGff5qSi85ljxanEgzPkM4AxacQgE-slHciuSB0AYB7Mdz8ia8WIbcHSmA5QPramorj6/pub?gid=0&single=true&output=csv";
+    
+    const pastelColors = [
+      '#fecdd3', '#fed7aa', '#fef08a', '#bbf7d0', '#99f6e4', 
+      '#bae6fd', '#c7d2fe', '#f5d0fe', '#fbcfe8', '#e2e8f0', '#ffedd5'
+    ];
+    const districtColorMap = {};
+    let colorIndex = 0;
+
+    function getDistrictColor(district) {
+      if (!district) return '#e2e8f0';
+      if (!districtColorMap[district]) {
+        districtColorMap[district] = pastelColors[colorIndex % pastelColors.length];
+        colorIndex++;
+      }
+      return districtColorMap[district];
+    }
+
+    const map = L.map('map', { zoomControl: false }).setView([-12.0464, -77.0428], 12);
+    L.control.zoom({ position: 'topright' }).addTo(map);
+
+    L.tileLayer('https://{s}.google.com/vt/lyrs=m&x={x}&y={y}&z={z}', {
+      maxZoom: 20,
+      subdomains: ['mt0', 'mt1', 'mt2', 'mt3'],
+      attribution: '&copy; Google Maps'
+    }).addTo(map);
+
+    let polygonsLayer = L.layerGroup().addTo(map);
+    let linesLayer = L.layerGroup().addTo(map);
+    let markersLayer = L.layerGroup().addTo(map);
+
+    let allStructures = [];
+    let tableRowsMap = new Map();
+
+    fetch('DISTRITOS.geojson')
+      .then(res => res.json())
+      .then(data => {
+        renderDistricts(data);
+      })
+      .catch(err => console.error("Error al cargar DISTRITOS.geojson:", err));
+
+    function renderDistricts(geojson) {
+      polygonsLayer.clearLayers();
+      L.geoJSON(geojson, {
+        style: function(feature) {
+          const distrito = feature.properties.DISTRITO || '';
+          return {
+            fillColor: getDistrictColor(distrito),
+            weight: 1.5,
+            opacity: 0.8,
+            color: '#64748b',
+            fillOpacity: 0.25
+          };
+        },
+        onEachFeature: function(feature, layer) {
+          const distrito = feature.properties.DISTRITO;
+          if (distrito) {
+            const center = layer.getBounds().getCenter();
+            L.marker(center, {
+              icon: L.divIcon({
+                className: 'district-label',
+                html: `<div>${distrito}</div>`,
+                iconSize: [120, 20]
+              })
+            }).addTo(polygonsLayer);
+          }
+        }
+      }).addTo(polygonsLayer);
+    }
+
+    fetch('Lineas.geojson')
+      .then(res => res.json())
+      .then(data => {
+        renderLines(data);
+      })
+      .catch(err => console.log("Aviso: El archivo Lineas.geojson se cargará desde la raíz."));
+
+    function renderLines(geojson) {
+      linesLayer.clearLayers();
+      L.geoJSON(geojson, {
+        style: function(feature) {
+          const linea = String(feature.properties.LINEA || '').trim();
+          let colorLine = '#1A6B11';
+          if (linea === '4' || linea.includes('4')) {
+            colorLine = '#1C6873';
+          } else if (linea === '2' || linea.includes('2')) {
+            colorLine = '#1A6B11';
+          }
+          return {
+            color: colorLine,
+            weight: 7,
+            opacity: 0.9,
+            smoothFactor: 1.2
+          };
+        }
+      }).addTo(linesLayer);
+    }
+
+    Papa.parse(SHEET_CSV_URL, {
+      download: true,
+      header: true,
+      skipEmptyLines: true,
+      complete: function(results) {
+        allStructures = results.data.map(row => {
+          const cleanRow = {};
+          Object.keys(row).forEach(key => {
+            const cleanKey = key.replace(/^\uFEFF/, '').trim();
+            cleanRow[cleanKey] = row[key];
+          });
+
+          const idVal = cleanRow['ID'] || '';
+          const tipoVal = cleanRow['Tipo'] || '';
+          const nombreVal = cleanRow['Nombre'] || '';
+          const lineaVal = cleanRow['Linea'] || '';
+          const provVal = cleanRow['Provincia'] || '';
+          const distVal = cleanRow['Distrito'] || '';
+          
+          const rawLat = String(cleanRow['Latitud'] || '0').trim().replace(',', '.');
+          const rawLong = String(cleanRow['Longitud'] || '0').trim().replace(',', '.');
+
+          return {
+            ID: String(idVal).trim(),
+            TIPO: String(tipoVal).trim(),
+            NOMBRE: String(nombreVal).trim(),
+            LINEA: String(lineaVal).trim(),
+            PROVINCIA: String(provVal).trim(),
+            DISTRITO: String(distVal).trim(),
+            LAT: parseFloat(rawLat),
+            LONG: parseFloat(rawLong)
+          };
+        }).filter(item => item.ID !== '' && !isNaN(item.LAT) && !isNaN(item.LONG) && item.LAT !== 0);
+
+        populateFilters(allStructures);
+        updateDisplay(allStructures);
+      },
+      error: function(err) {
+        console.error("Error al descargar el CSV:", err);
+      }
+    });
+
+    function populateFilters(data) {
+      const provinces = [...new Set(data.map(item => item.PROVINCIA).filter(Boolean))];
+      const districts = [...new Set(data.map(item => item.DISTRITO).filter(Boolean))];
+
+      const provSelect = document.getElementById('provinceFilter');
+      provSelect.innerHTML = '<option value="">Todas las Provincias</option>';
+      provinces.forEach(p => provSelect.innerHTML += `<option value="${p}">${p}</option>`);
+
+      const distSelect = document.getElementById('districtFilter');
+      distSelect.innerHTML = '<option value="">Todos los Distritos</option>';
+      districts.forEach(d => distSelect.innerHTML += `<option value="${d}">${d}</option>`);
+    }
+
+    function getIconForType(tipo) {
+      return L.divIcon({
+        className: 'custom-pin',
+        html: `<div style="background-color: #2563eb; width: 14px; height: 14px; border: 2.5px solid white; border-radius: 50%; box-shadow: 0 0 6px rgba(0,0,0,0.5);"></div>`,
+        iconSize: [14, 14]
+      });
+    }
+
+    function updateDisplay(data) {
+      markersLayer.clearLayers();
+      const tbody = document.getElementById('tableBody');
+      tbody.innerHTML = '';
+      tableRowsMap.clear();
+
+      const latLngs = [];
+
+      data.forEach((item) => {
+        const lat = item.LAT;
+        const lng = item.LONG;
+        latLngs.push([lat, lng]);
+
+        const marker = L.marker([lat, lng], { icon: getIconForType(item.TIPO) });
+        
+        const popupContent = `
+          <div class="custom-popup">
+            <div class="popup-title">${item.ID}</div>
+            <div class="popup-row"><b>TIPO:</b> ${item.TIPO || 'N/A'}</div>
+            <div class="popup-row"><b>NOMBRE LÍNEA:</b> ${item.LINEA || 'N/A'}</div>
+            <div class="popup-row"><b>PROVINCIA:</b> ${item.PROVINCIA || 'N/A'}</div>
+            <div class="popup-row"><b>DISTRITO:</b> ${item.DISTRITO || 'N/A'}</div>
+          </div>
+        `;
+        marker.bindPopup(popupContent);
+
+        marker.bindTooltip(item.ID, {
+          permanent: true,
+          direction: 'top',
+          className: 'id-label',
+          offset: [0, -6]
+        });
+
+        markersLayer.addLayer(marker);
+
+        const tr = document.createElement('tr');
+        tr.innerHTML = `
+          <td><b>${item.ID}</b></td>
+          <td>${item.TIPO || ''}</td>
+          <td>${item.LINEA || ''}</td>
+          <td>${item.PROVINCIA || ''}</td>
+          <td>${item.DISTRITO || ''}</td>
+        `;
+
+        tr.addEventListener('mouseenter', () => {
+          tr.classList.add('selected');
+          marker.openPopup();
+          map.panTo([lat, lng], { animate: true });
+        });
+        tr.addEventListener('mouseleave', () => {
+          tr.classList.remove('selected');
+          marker.closePopup();
+        });
+        tr.addEventListener('click', () => {
+          map.setView([lat, lng], 16);
+          marker.openPopup();
+        });
+
+        marker.on('click', () => {
+          document.querySelectorAll('.data-table tr').forEach(row => row.classList.remove('selected'));
+          tr.classList.add('selected');
+          tr.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+        });
+
+        marker.on('mouseover', () => {
+          tr.classList.add('selected');
+        });
+        marker.on('mouseout', () => {
+          tr.classList.remove('selected');
+        });
+
+        tableRowsMap.set(item.ID, tr);
+        tbody.appendChild(tr);
+      });
+
+      if (latLngs.length > 0) {
+        const bounds = L.latLngBounds(latLngs);
+        map.fitBounds(bounds, { padding: [50, 50], maxZoom: 15 });
+      }
+    }
+
+    function applyFilters() {
+      const query = document.getElementById('searchFilter').value.toLowerCase();
+      const prov = document.getElementById('provinceFilter').value;
+      const dist = document.getElementById('districtFilter').value;
+
+      const filtered = allStructures.filter(item => {
+        const matchQuery = Object.values(item).some(val => String(val).toLowerCase().includes(query));
+        const matchProv = !prov || item.PROVINCIA === prov;
+        const matchDist = !dist || item.DISTRITO === dist;
+        return matchQuery && matchProv && matchDist;
+      });
+
+      updateDisplay(filtered);
+    }
+
+    document.getElementById('searchFilter').addEventListener('input', applyFilters);
+    document.getElementById('provinceFilter').addEventListener('change', applyFilters);
+    document.getElementById('districtFilter').addEventListener('change', applyFilters);
+
+    const legend = L.control({ position: 'bottomright' });
+    legend.onAdd = function (map) {
+      const div = L.DomUtil.create('div', 'map-legend');
+      div.innerHTML = `
+        <strong>Leyenda</strong>
+        <div class="legend-item"><div class="legend-color" style="background:#2563eb;"></div> Estructura</div>
+        <div class="legend-item"><div class="legend-color" style="background:#1A6B11;"></div> Línea 2</div>
+        <div class="legend-item"><div class="legend-color" style="background:#1C6873;"></div> Línea 4</div>
+      `;
+      return div;
+    };
+    legend.addTo(map);
+}
