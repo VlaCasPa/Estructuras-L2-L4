@@ -132,6 +132,14 @@ body, html {
   cursor: pointer;
 }
 
+/* Sombreado visual por similitud de obra (Lean Visual Management) */
+.obra-badge {
+  padding: 2px 6px;
+  border-radius: 4px;
+  font-weight: 600;
+  display: inline-block;
+}
+
 /* Permitir salto de línea para nombres de distritos compartidos */
 .district-cell {
   white-space: pre-line;
