@@ -20,10 +20,11 @@ const googleProvider = new GoogleAuthProvider();
 const REPO_ACTUAL = "Estructuras-L2-L4";
 const STORAGE_KEY_DISCLAIMER = "ccm2l_estructuras_l2_l4_disclaimer_accepted_v1";
 let usuarioActualGlobal = null;
+let mapaInicializadoGlobal = false;
 
 setPersistence(auth, browserLocalPersistence).catch(console.warn);
 
-// Control de flujo inicial al cargar la página
+// Control de flujo inicial al cargar la página (Blindado contra cargas prematuras)
 document.addEventListener("DOMContentLoaded", () => {
     onAuthStateChanged(auth, async (user) => {
         if (user) {
@@ -31,11 +32,10 @@ document.addEventListener("DOMContentLoaded", () => {
             ocultarModalLogin();
             await validarPermisosYDisclaimer(user);
         } else {
+            usuarioActualGlobal = null;
             mostrarModalLogin();
         }
     });
-
-    inicializarAplicacionMapa();
 });
 
 // Funciones globales de Autenticación
@@ -82,6 +82,7 @@ async function validarPermisosYDisclaimer(user) {
     // Resguardo absoluto inmediato para superadministradores
     if (emailUser === "zebaxx@gmail.com" || emailUser === "vcasasp@ccmetrolima.com" || emailUser === "permisosccm2l@gmail.com" || emailUser === "tnoriega.arq@gmail.com") {
         verificarDisclaimerUsuario();
+        inicializarAplicacionMapaSiEsNecesario();
         return;
     }
 
@@ -98,6 +99,7 @@ async function validarPermisosYDisclaimer(user) {
 
             if (usuarioAutorizado) {
                 verificarDisclaimerUsuario();
+                inicializarAplicacionMapaSiEsNecesario();
             } else {
                 restringirAccesoNoAutorizado();
             }
@@ -106,11 +108,7 @@ async function validarPermisosYDisclaimer(user) {
         }
     } catch (error) {
         console.error("Error al validar contra Firestore:", error);
-        if (emailUser === "zebaxx@gmail.com" || emailUser === "vcasasp@ccmetrolima.com") {
-            verificarDisclaimerUsuario();
-        } else {
-            restringirAccesoNoAutorizado();
-        }
+        restringirAccesoNoAutorizado();
     }
 }
 
@@ -164,7 +162,7 @@ window.aceptarDisclaimer = async function() {
     }
 };
 
-// --- LÓGICA ORIGINAL DE MAPA Y ESTRUCTURAS ---
+// --- LÓGICA DE MAPA Y ESTRUCTURAS (Ejecución controlada tras autorización) ---
 function inicializarAplicacionMapa() {
     const SHEET_CSV_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vQOJZ3-HTVbEGff5qSi85ljxanEgzPkM4AxacQgE-slHciuSB0AYB7Mdz8ia8WIbcHSmA5QPramorj6/pub?gid=0&single=true&output=csv";
     
@@ -330,6 +328,7 @@ function inicializarAplicacionMapa() {
     function updateDisplay(data) {
       markersLayer.clearLayers();
       const tbody = document.getElementById('tableBody');
+      if (!tbody) return;
       tbody.innerHTML = '';
       tableRowsMap.clear();
 
@@ -439,4 +438,10 @@ function inicializarAplicacionMapa() {
       return div;
     };
     legend.addTo(map);
+}
+
+function inicializarAplicacionMapaSiEsNecesario() {
+    if (mapaInicializadoGlobal) return;
+    mapaInicializadoGlobal = true;
+    inicializarAplicacionMapa();
 }
