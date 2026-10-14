@@ -54,18 +54,21 @@
       <div class="author-credit">Diseñado por Vladimir Casas</div>
     </div>
 
-    <!-- Panel de Tabla y Filtros (1/3 en web, superior compacto en celular) -->
+    <!-- Panel de Tabla, Filtros (incluyendo Obra) -->
     <div class="sidebar">
       <div class="panel-header">
         <div class="app-title-discreet">Ubicación de las estructuras de la Línea 2 y Ramal L4</div>
         <div class="filters-container">
-          <input type="text" id="searchFilter" class="filter-input" placeholder="Filtrar por ID, Nombre o Tipo..." />
+          <input type="text" id="searchFilter" class="filter-input" placeholder="Filtrar por ID, Nombre, Tipo u Obra..." />
           <div style="display: flex; gap: 4px;">
             <select id="provinceFilter" class="filter-select">
               <option value="">Todas las Provincias</option>
             </select>
             <select id="districtFilter" class="filter-select">
               <option value="">Todos los Distritos</option>
+            </select>
+            <select id="obraFilter" class="filter-select">
+              <option value="">Todas las Obras</option>
             </select>
           </div>
         </div>
@@ -77,6 +80,7 @@
               <th>ID</th>
               <th>Tipo</th>
               <th>Línea</th>
+              <th>Obra</th>
               <th>Provincia</th>
               <th>Distrito</th>
             </tr>
