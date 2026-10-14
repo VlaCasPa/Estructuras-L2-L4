@@ -57,32 +57,32 @@ body, html {
 }
 
 .panel-header {
-  padding: 12px 14px;
+  padding: 10px 12px;
   background: #b8b6b6; 
   border-bottom: 1px solid #9e9c9c;
   flex-shrink: 0;
 }
 
 .app-title-discreet {
-  font-size: 0.82rem;
+  font-size: 0.8rem;
   color: #1e293b;
   font-weight: 700;
-  margin-bottom: 6px;
+  margin-bottom: 5px;
   letter-spacing: -0.2px;
 }
 
 .filters-container {
   display: flex;
   flex-direction: column;
-  gap: 6px;
+  gap: 5px;
 }
 
 .filter-input, .filter-select {
   width: 100%;
-  padding: 6px 9px;
+  padding: 6px 8px;
   border: 1px solid #64748b;
   border-radius: 5px;
-  font-size: 0.78rem;
+  font-size: 0.75rem;
   outline: none;
   background: #ffffff;
   transition: border-color 0.2s;
@@ -103,13 +103,13 @@ body, html {
   width: 100%;
   border-collapse: collapse;
   text-align: left;
-  font-size: 0.75rem;
+  font-size: 0.73rem;
 }
 
 .data-table th {
   background: #8c95a1 !important;
   color: #ffffff;
-  padding: 8px 10px;
+  padding: 7px 8px;
   position: sticky;
   top: 0;
   z-index: 10;
@@ -120,7 +120,7 @@ body, html {
 }
 
 .data-table td {
-  padding: 6px 10px;
+  padding: 5px 8px;
   border-bottom: 1px solid #c2c0c0;
   color: #1e293b;
   cursor: pointer;
@@ -201,14 +201,14 @@ body, html {
 /* Leyenda separada y estéticamente definida */
 .map-legend {
   background: rgba(255, 255, 255, 0.98);
-  padding: 8px 10px;
+  padding: 7px 9px;
   border-radius: 6px;
   box-shadow: 0 3px 8px rgba(0,0,0,0.2);
   line-height: 1.35;
-  font-size: 0.72rem;
+  font-size: 0.7rem;
   color: #334155;
-  margin-bottom: 25px !important;
-  margin-right: 12px !important;
+  margin-bottom: 30px !important;
+  margin-right: 10px !important;
   border: 1px solid #94a3b8;
   z-index: 1000;
 }
@@ -216,25 +216,25 @@ body, html {
 .legend-item {
   display: flex;
   align-items: center;
-  gap: 6px;
-  margin-bottom: 3px;
+  gap: 5px;
+  margin-bottom: 2px;
   white-space: nowrap;
 }
 
 .legend-color {
-  width: 11px;
-  height: 11px;
+  width: 10px;
+  height: 10px;
   border-radius: 2px;
 }
 
 /* Marca de agua fija en la esquina inferior izquierda con fondo blanco */
 .author-credit {
   position: absolute;
-  bottom: 25px;
-  left: 12px;
+  bottom: 30px;
+  left: 10px;
   background: rgba(255, 255, 255, 0.98);
-  padding: 5px 9px;
-  font-size: 10px;
+  padding: 6px 10px;
+  font-size: 10.5px;
   font-weight: 700;
   color: #1e293b;
   border-radius: 5px;
@@ -316,43 +316,42 @@ body, html {
   background: #f8fafc;
 }
 
-/* Versión Celular Optimizada (Referencia exacta solicitada) */
+/* Versión Celular Optimizada (8 filas visibles con scroll, leyenda y marca de agua elevadas) */
 @media (max-width: 768px) {
   .app-container {
-    flex-direction: column;
-    padding: 4px;
-    gap: 4px;
+    flex-direction: column-reverse;
+    padding: 3px;
+    gap: 3px;
   }
   #map {
     flex: 2;
     height: auto;
-    min-height: 55vh;
+    min-height: 52vh;
   }
   .sidebar {
-    flex: 1;
+    flex: 0 0 auto;
     height: auto;
-    max-height: 40vh; 
+    max-height: 48vh; 
   }
   .table-container {
-    max-height: calc(40vh - 85px);
+    max-height: calc(48vh - 95px); /* Ajustado para mostrar cómodamente 8 filas compactas */
   }
   .data-table {
-    font-size: 0.68rem;
+    font-size: 0.65rem;
   }
   .data-table td {
-    padding: 3px 5px;
+    padding: 3px 4px;
   }
   .author-credit {
-    bottom: 15px;
-    left: 8px;
+    bottom: 22px;
+    left: 6px;
     font-size: 8.5px;
-    padding: 3px 6px;
+    padding: 4px 7px;
   }
-  /* Leyenda elevada en celular para evitar que se corte */
   .map-legend {
-    margin-bottom: 35px !important;
-    margin-right: 8px !important;
-    font-size: 0.65rem;
-    padding: 6px 8px;
+    margin-bottom: 40px !important;
+    margin-right: 6px !important;
+    font-size: 0.62rem;
+    padding: 5px 7px;
   }
 }
