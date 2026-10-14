@@ -334,6 +334,17 @@ function inicializarAplicacionMapa() {
       });
     }
 
+    // Generador determinista de tonos suaves por Obra (Lean Visual Management)
+    function getObraBadgeColor(obra) {
+      if (!obra) return 'transparent';
+      const obraColors = ['#fdebd0', '#d4efdf', '#d4e6f1', '#f5eef8', '#fcf3cf', '#e8f8f5'];
+      let hash = 0;
+      for (let i = 0; i < obra.length; i++) {
+        hash = obra.charCodeAt(i) + ((hash << 5) - hash);
+      }
+      return obraColors[Math.abs(hash) % obraColors.length];
+    }
+
     function updateDisplay(data) {
       markersLayer.clearLayers();
       const tbody = document.getElementById('tableBody');
@@ -373,18 +384,19 @@ function inicializarAplicacionMapa() {
 
         const tr = document.createElement('tr');
         
-        // Manejo de distritos compartidos (si tiene 2 nombres o saltos, formatear con salto de línea)
+        // Manejo de distritos compartidos en celdas para que se muestren en dos hileras si aplica
         let distritoFormateado = item.DISTRITO || '';
         if (distritoFormateado.includes(' y ') || distritoFormateado.includes(' - ') || distritoFormateado.length > 20) {
-            // Reemplazar separadores comunes o espacios largos por saltos de línea estilizados
             distritoFormateado = distritoFormateado.replace(/ y | \/ | - /g, '\n');
         }
+
+        const colorBadge = getObraBadgeColor(item.OBRA);
 
         tr.innerHTML = `
           <td><b>${item.ID}</b></td>
           <td>${item.TIPO || ''}</td>
           <td>${item.LINEA || ''}</td>
-          <td>${item.OBRA || ''}</td>
+          <td><span class="obra-badge" style="background-color: ${colorBadge};">${item.OBRA || ''}</span></td>
           <td>${item.PROVINCIA || ''}</td>
           <td class="district-cell">${distritoFormateado}</td>
         `;
