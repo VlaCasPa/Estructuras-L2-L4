@@ -305,7 +305,7 @@ function inicializarAplicacionMapa() {
     function populateFilters(data) {
       const provinces = [...new Set(data.map(item => item.PROVINCIA).filter(Boolean))];
       const districts = [...new Set(data.map(item => item.DISTRITO).filter(Boolean))];
-      const obras = [...new Set(data.map(item => item.OBRA).filter(Boolean))];
+      const obras = [...new Set(data.map(item => item.OBRA).filter(Boolean))].sort();
 
       const provSelect = document.getElementById('provinceFilter');
       if (provSelect) {
@@ -334,15 +334,27 @@ function inicializarAplicacionMapa() {
       });
     }
 
-    // Generador determinista de tonos suaves por Obra (Lean Visual Management)
+    // Mapa de colores categóricos fijos y contrastados por número de Obra (Evita tonos idénticos)
     function getObraBadgeColor(obra) {
       if (!obra) return 'transparent';
-      const obraColors = ['#fdebd0', '#d4efdf', '#d4e6f1', '#f5eef8', '#fcf3cf', '#e8f8f5'];
+      const obraColorMap = {
+        '803': '#f5b7b1', // Salmón suave
+        '805': '#a9cce3', // Azul cielo
+        '806': '#f9e79f', // Amarillo pastel
+        '808': '#a3e4d7', // Turquesa claro
+        '814': '#d7bde2', // Lila claro
+        '815': '#f8c471'  // Naranja pastel
+      };
+      // Si la obra existe en el mapa usa su color fijo, sino genera uno determinista seguro de alta distinción
+      if (obraColorMap[obra]) {
+        return obraColorMap[obra];
+      }
+      const fallbackColors = ['#fadbd8', '#d4efdf', '#d4e6f1', '#fcf3cf', '#e8f8f5', '#ebdef0'];
       let hash = 0;
       for (let i = 0; i < obra.length; i++) {
         hash = obra.charCodeAt(i) + ((hash << 5) - hash);
       }
-      return obraColors[Math.abs(hash) % obraColors.length];
+      return fallbackColors[Math.abs(hash) % fallbackColors.length];
     }
 
     function updateDisplay(data) {
@@ -384,7 +396,6 @@ function inicializarAplicacionMapa() {
 
         const tr = document.createElement('tr');
         
-        // Manejo de distritos compartidos en celdas para que se muestren en dos hileras si aplica
         let distritoFormateado = item.DISTRITO || '';
         if (distritoFormateado.includes(' y ') || distritoFormateado.includes(' - ') || distritoFormateado.length > 20) {
             distritoFormateado = distritoFormateado.replace(/ y | \/ | - /g, '\n');
