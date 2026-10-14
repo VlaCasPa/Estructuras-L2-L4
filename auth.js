@@ -24,7 +24,6 @@ let mapaInicializadoGlobal = false;
 
 setPersistence(auth, browserLocalPersistence).catch(console.warn);
 
-// Control de flujo inicial al cargar la página (Blindado contra cargas prematuras)
 document.addEventListener("DOMContentLoaded", () => {
     onAuthStateChanged(auth, async (user) => {
         if (user) {
@@ -38,7 +37,6 @@ document.addEventListener("DOMContentLoaded", () => {
     });
 });
 
-// Funciones globales de Autenticación
 window.loginConGoogle = async function() {
     try {
         await signInWithPopup(auth, googleProvider);
@@ -75,11 +73,9 @@ function ocultarModalLogin() {
     if (modal) modal.style.display = 'none';
 }
 
-// Validación de Permisos y Disclaimer en Firestore
 async function validarPermisosYDisclaimer(user) {
     const emailUser = user.email.toLowerCase().trim();
 
-    // Resguardo absoluto inmediato para superadministradores
     if (emailUser === "zebaxx@gmail.com" || emailUser === "vcasasp@ccmetrolima.com" || emailUser === "permisosccm2l@gmail.com" || emailUser === "tnoriega.arq@gmail.com") {
         verificarDisclaimerUsuario();
         inicializarAplicacionMapaSiEsNecesario();
@@ -162,7 +158,7 @@ window.aceptarDisclaimer = async function() {
     }
 };
 
-// --- LÓGICA DE MAPA Y ESTRUCTURAS (Ejecución controlada tras autorización) ---
+// --- LÓGICA DE MAPA Y ESTRUCTURAS ---
 function inicializarAplicacionMapa() {
     const SHEET_CSV_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vQOJZ3-HTVbEGff5qSi85ljxanEgzPkM4AxacQgE-slHciuSB0AYB7Mdz8ia8WIbcHSmA5QPramorj6/pub?gid=0&single=true&output=csv";
     
@@ -278,6 +274,7 @@ function inicializarAplicacionMapa() {
           const tipoVal = cleanRow['Tipo'] || '';
           const nombreVal = cleanRow['Nombre'] || '';
           const lineaVal = cleanRow['Linea'] || '';
+          const obraVal = cleanRow['Obra'] || '';
           const provVal = cleanRow['Provincia'] || '';
           const distVal = cleanRow['Distrito'] || '';
           
@@ -289,6 +286,7 @@ function inicializarAplicacionMapa() {
             TIPO: String(tipoVal).trim(),
             NOMBRE: String(nombreVal).trim(),
             LINEA: String(lineaVal).trim(),
+            OBRA: String(obraVal).trim(),
             PROVINCIA: String(provVal).trim(),
             DISTRITO: String(distVal).trim(),
             LAT: parseFloat(rawLat),
@@ -307,14 +305,25 @@ function inicializarAplicacionMapa() {
     function populateFilters(data) {
       const provinces = [...new Set(data.map(item => item.PROVINCIA).filter(Boolean))];
       const districts = [...new Set(data.map(item => item.DISTRITO).filter(Boolean))];
+      const obras = [...new Set(data.map(item => item.OBRA).filter(Boolean))];
 
       const provSelect = document.getElementById('provinceFilter');
-      provSelect.innerHTML = '<option value="">Todas las Provincias</option>';
-      provinces.forEach(p => provSelect.innerHTML += `<option value="${p}">${p}</option>`);
+      if (provSelect) {
+        provSelect.innerHTML = '<option value="">Todas las Provincias</option>';
+        provinces.forEach(p => provSelect.innerHTML += `<option value="${p}">${p}</option>`);
+      }
 
       const distSelect = document.getElementById('districtFilter');
-      distSelect.innerHTML = '<option value="">Todos los Distritos</option>';
-      districts.forEach(d => distSelect.innerHTML += `<option value="${d}">${d}</option>`);
+      if (distSelect) {
+        distSelect.innerHTML = '<option value="">Todos los Distritos</option>';
+        districts.forEach(d => distSelect.innerHTML += `<option value="${d}">${d}</option>`);
+      }
+
+      const obraSelect = document.getElementById('obraFilter');
+      if (obraSelect) {
+        obraSelect.innerHTML = '<option value="">Todas las Obras</option>';
+        obras.forEach(o => obraSelect.innerHTML += `<option value="${o}">Obra ${o}</option>`);
+      }
     }
 
     function getIconForType(tipo) {
@@ -346,6 +355,7 @@ function inicializarAplicacionMapa() {
             <div class="popup-title">${item.ID}</div>
             <div class="popup-row"><b>TIPO:</b> ${item.TIPO || 'N/A'}</div>
             <div class="popup-row"><b>NOMBRE LÍNEA:</b> ${item.LINEA || 'N/A'}</div>
+            <div class="popup-row"><b>OBRA:</b> ${item.OBRA || 'N/A'}</div>
             <div class="popup-row"><b>PROVINCIA:</b> ${item.PROVINCIA || 'N/A'}</div>
             <div class="popup-row"><b>DISTRITO:</b> ${item.DISTRITO || 'N/A'}</div>
           </div>
@@ -362,12 +372,21 @@ function inicializarAplicacionMapa() {
         markersLayer.addLayer(marker);
 
         const tr = document.createElement('tr');
+        
+        // Manejo de distritos compartidos (si tiene 2 nombres o saltos, formatear con salto de línea)
+        let distritoFormateado = item.DISTRITO || '';
+        if (distritoFormateado.includes(' y ') || distritoFormateado.includes(' - ') || distritoFormateado.length > 20) {
+            // Reemplazar separadores comunes o espacios largos por saltos de línea estilizados
+            distritoFormateado = distritoFormateado.replace(/ y | \/ | - /g, '\n');
+        }
+
         tr.innerHTML = `
           <td><b>${item.ID}</b></td>
           <td>${item.TIPO || ''}</td>
           <td>${item.LINEA || ''}</td>
+          <td>${item.OBRA || ''}</td>
           <td>${item.PROVINCIA || ''}</td>
-          <td>${item.DISTRITO || ''}</td>
+          <td class="district-cell">${distritoFormateado}</td>
         `;
 
         tr.addEventListener('mouseenter', () => {
@@ -411,20 +430,28 @@ function inicializarAplicacionMapa() {
       const query = document.getElementById('searchFilter').value.toLowerCase();
       const prov = document.getElementById('provinceFilter').value;
       const dist = document.getElementById('districtFilter').value;
+      const obra = document.getElementById('obraFilter').value;
 
       const filtered = allStructures.filter(item => {
         const matchQuery = Object.values(item).some(val => String(val).toLowerCase().includes(query));
         const matchProv = !prov || item.PROVINCIA === prov;
         const matchDist = !dist || item.DISTRITO === dist;
-        return matchQuery && matchProv && matchDist;
+        const matchObra = !obra || item.OBRA === obra;
+        return matchQuery && matchProv && matchDist && matchObra;
       });
 
       updateDisplay(filtered);
     }
 
-    document.getElementById('searchFilter').addEventListener('input', applyFilters);
-    document.getElementById('provinceFilter').addEventListener('change', applyFilters);
-    document.getElementById('districtFilter').addEventListener('change', applyFilters);
+    const searchInput = document.getElementById('searchFilter');
+    const provSelect = document.getElementById('provinceFilter');
+    const distSelect = document.getElementById('districtFilter');
+    const obraSelect = document.getElementById('obraFilter');
+
+    if (searchInput) searchInput.addEventListener('input', applyFilters);
+    if (provSelect) provSelect.addEventListener('change', applyFilters);
+    if (distSelect) distSelect.addEventListener('change', applyFilters);
+    if (obraSelect) obraSelect.addEventListener('change', applyFilters);
 
     const legend = L.control({ position: 'bottomright' });
     legend.onAdd = function (map) {
