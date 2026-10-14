@@ -77,12 +77,18 @@ body, html {
   gap: 5px;
 }
 
+.filters-row {
+  display: flex;
+  gap: 4px;
+  flex-wrap: nowrap;
+}
+
 .filter-input, .filter-select {
   width: 100%;
-  padding: 6px 8px;
+  padding: 5px 7px;
   border: 1px solid #64748b;
   border-radius: 5px;
-  font-size: 0.75rem;
+  font-size: 0.72rem;
   outline: none;
   background: #ffffff;
   transition: border-color 0.2s;
@@ -103,7 +109,7 @@ body, html {
   width: 100%;
   border-collapse: collapse;
   text-align: left;
-  font-size: 0.73rem;
+  font-size: 0.72rem;
 }
 
 .data-table th {
@@ -124,9 +130,12 @@ body, html {
   border-bottom: 1px solid #c2c0c0;
   color: #1e293b;
   cursor: pointer;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
+}
+
+/* Permitir salto de línea para nombres de distritos compartidos */
+.district-cell {
+  white-space: pre-line;
+  line-height: 1.15;
 }
 
 .data-table tr:hover td, .data-table tr.selected td {
@@ -230,11 +239,11 @@ body, html {
 /* Marca de agua fija en la esquina inferior izquierda con fondo blanco */
 .author-credit {
   position: absolute;
-  bottom: 30px;
-  left: 10px;
+  bottom: 25px;
+  left: 12px;
   background: rgba(255, 255, 255, 0.98);
-  padding: 6px 10px;
-  font-size: 10.5px;
+  padding: 5px 9px;
+  font-size: 10px;
   font-weight: 700;
   color: #1e293b;
   border-radius: 5px;
@@ -316,7 +325,7 @@ body, html {
   background: #f8fafc;
 }
 
-/* Versión Celular Optimizada (8 filas visibles con scroll, leyenda y marca de agua elevadas) */
+/* Versión Celular Optimizada (Filtros completos en primera pantalla y 8 filas visibles) */
 @media (max-width: 768px) {
   .app-container {
     flex-direction: column-reverse;
@@ -333,11 +342,25 @@ body, html {
     height: auto;
     max-height: 48vh; 
   }
+  .panel-header {
+    padding: 6px 8px;
+  }
+  .app-title-discreet {
+    font-size: 0.7rem;
+    margin-bottom: 3px;
+  }
+  .filter-input, .filter-select {
+    padding: 4px 6px;
+    font-size: 0.68rem;
+  }
   .table-container {
-    max-height: calc(48vh - 95px); /* Ajustado para mostrar cómodamente 8 filas compactas */
+    max-height: calc(48vh - 75px);
   }
   .data-table {
-    font-size: 0.65rem;
+    font-size: 0.62rem;
+  }
+  .data-table th {
+    padding: 5px 4px;
   }
   .data-table td {
     padding: 3px 4px;
@@ -345,13 +368,13 @@ body, html {
   .author-credit {
     bottom: 22px;
     left: 6px;
-    font-size: 8.5px;
-    padding: 4px 7px;
+    font-size: 8px;
+    padding: 3px 6px;
   }
   .map-legend {
-    margin-bottom: 40px !important;
+    margin-bottom: 35px !important;
     margin-right: 6px !important;
-    font-size: 0.62rem;
-    padding: 5px 7px;
+    font-size: 0.6rem;
+    padding: 5px 6px;
   }
 }
