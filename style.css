@@ -132,12 +132,13 @@ body, html {
   cursor: pointer;
 }
 
-/* Sombreado visual por similitud de obra (Lean Visual Management) */
+/* Insignia con color categórico estricto por Obra (Lean Visual Management) */
 .obra-badge {
   padding: 2px 6px;
   border-radius: 4px;
   font-weight: 600;
   display: inline-block;
+  border: 1px solid rgba(0,0,0,0.1);
 }
 
 /* Permitir salto de línea para nombres de distritos compartidos */
@@ -354,12 +355,12 @@ body, html {
     padding: 6px 8px;
   }
   .app-title-discreet {
-    font-size: 0.7rem;
+    font-size: 0.68rem;
     margin-bottom: 3px;
   }
   .filter-input, .filter-select {
-    padding: 4px 6px;
-    font-size: 0.68rem;
+    padding: 3px 5px;
+    font-size: 0.65rem;
   }
   .table-container {
     max-height: calc(48vh - 75px);
@@ -371,7 +372,7 @@ body, html {
     padding: 5px 4px;
   }
   .data-table td {
-    padding: 3px 4px;
+    padding: 2px 3px;
   }
   .author-credit {
     bottom: 22px;
