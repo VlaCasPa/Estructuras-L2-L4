@@ -158,7 +158,7 @@ window.aceptarDisclaimer = async function() {
     }
 };
 
-// --- LÓGICA DE MAPA Y ESTRUCTURAS ---
+// --- LÓGICA DE MAPA, ESTRUCTURAS Y TÚNELES ---
 function inicializarAplicacionMapa() {
     const SHEET_CSV_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vQOJZ3-HTVbEGff5qSi85ljxanEgzPkM4AxacQgE-slHciuSB0AYB7Mdz8ia8WIbcHSmA5QPramorj6/pub?gid=0&single=true&output=csv";
     
@@ -189,10 +189,31 @@ function inicializarAplicacionMapa() {
 
     let polygonsLayer = L.layerGroup().addTo(map);
     let linesLayer = L.layerGroup().addTo(map);
+    let tunnelsLayer = L.layerGroup().addTo(map); // Capa intermedia para túneles
     let markersLayer = L.layerGroup().addTo(map);
 
     let allStructures = [];
+    let structuresMap = new Map();
     let tableRowsMap = new Map();
+    let globalLineasGeoJson = null;
+
+    // Definición de los 5 túneles requeridos
+    const tunnelDefinitions = [
+      { tunnel: 'TBM 2', startId: 'E01', endId: 'E04', branch: 'L2', obra: '807' },
+      { tunnel: 'TBM 2', startId: 'E4-01', endId: 'E4-05', branch: 'L4', obra: '807' },
+      { tunnel: 'TBM 1', startId: 'E04', endId: 'E19', branch: 'L2', obra: '801' },
+      { tunnel: 'NATM', startId: 'E19', endId: 'E27', branch: 'L2', obra: '804' },
+      { tunnel: 'TR PTSA', startId: 'E24', endId: 'PTSA', branch: 'L2', obra: '804' }
+    ];
+
+    function getTunnelColorByObra(obra) {
+      const obraTunnelColors = {
+        '801': '#3b82f6', // Azul brillante (Obra 801)
+        '804': '#f59e0b', // Ambar / Naranja (Obra 804)
+        '807': '#10b981'  // Verde esmeralda (Obra 807)
+      };
+      return obraTunnelColors[obra] || '#8b5cf6';
+    }
 
     fetch('DISTRITOS.geojson')
       .then(res => res.json())
@@ -233,7 +254,9 @@ function inicializarAplicacionMapa() {
     fetch('Lineas.geojson')
       .then(res => res.json())
       .then(data => {
+        globalLineasGeoJson = data;
         renderLines(data);
+        renderTunnelsTableAndGeometry();
       })
       .catch(err => console.log("Aviso: El archivo Lineas.geojson se cargará desde la raíz."));
 
@@ -294,13 +317,127 @@ function inicializarAplicacionMapa() {
           };
         }).filter(item => item.ID !== '' && !isNaN(item.LAT) && !isNaN(item.LONG) && item.LAT !== 0);
 
+        structuresMap.clear();
+        allStructures.forEach(item => {
+          structuresMap.set(item.ID, item);
+        });
+
         populateFilters(allStructures);
         updateDisplay(allStructures);
+        renderTunnelsTableAndGeometry();
       },
       error: function(err) {
         console.error("Error al descargar el CSV:", err);
       }
     });
+
+    function renderTunnelsTableAndGeometry() {
+      const tbodyTuneles = document.getElementById('tableBodyTuneles');
+      if (!tbodyTuneles) return;
+      tbodyTuneles.innerHTML = '';
+      tunnelsLayer.clearLayers();
+
+      tunnelDefinitions.forEach((t) => {
+        const startStruct = structuresMap.get(t.startId);
+        const endStruct = structuresMap.get(t.endId);
+
+        const tr = document.createElement('tr');
+        const badgeColor = getObraBadgeColor(t.obra);
+        
+        tr.innerHTML = `
+          <td><b>${t.tunnel}</b></td>
+          <td>${t.startId}</td>
+          <td>${t.endId}</td>
+          <td>${t.branch}</td>
+          <td><span class="obra-badge" style="background-color: ${badgeColor};">${t.obra}</span></td>
+        `;
+
+        if (startStruct && endStruct && globalLineasGeoJson) {
+          const tunnelCoords = extractSubsegmentFromLineas(startStruct, endStruct, t.branch);
+          
+          if (tunnelCoords.length > 0) {
+            const tunnelColor = getTunnelColorByObra(t.obra);
+            const polyline = L.polyline(tunnelCoords, {
+              color: tunnelColor,
+              weight: 12,      // Encima de Línea 2 y 4 (que tienen weight 7)
+              opacity: 0.55,   // Translúcido para no saturar pantalla
+              smoothFactor: 1.2
+            });
+
+            polyline.bindPopup(`
+              <div class="custom-popup">
+                <div class="popup-title">TÚNEL: ${t.tunnel}</div>
+                <div class="popup-row"><b>TRAMO:</b> ${t.startId} ➔ ${t.endId}</div>
+                <div class="popup-row"><b>RAMAL / LÍNEA:</b> ${t.branch}</div>
+                <div class="popup-row"><b>OBRA:</b> ${t.obra}</div>
+              </div>
+            `);
+
+            tunnelsLayer.addLayer(polyline);
+
+            tr.addEventListener('mouseenter', () => {
+              tr.classList.add('selected');
+              polyline.setStyle({ opacity: 0.85, weight: 14 });
+            });
+            tr.addEventListener('mouseleave', () => {
+              tr.classList.remove('selected');
+              polyline.setStyle({ opacity: 0.55, weight: 12 });
+            });
+            tr.addEventListener('click', () => {
+              map.fitBounds(polyline.getBounds(), { padding: [40, 40], maxZoom: 16 });
+              polyline.openPopup();
+            });
+          }
+        }
+
+        tbodyTuneles.appendChild(tr);
+      });
+    }
+
+    function extractSubsegmentFromLineas(startPt, endPt, branch) {
+      let bestCoords = [];
+      if (!globalLineasGeoJson || !globalLineasGeoJson.features) return bestCoords;
+
+      globalLineasGeoJson.features.forEach(feat => {
+        const lineaProp = String(feat.properties.LINEA || '').trim();
+        if (branch === 'L4' && !lineaProp.includes('4')) return;
+        if (branch === 'L2' && !lineaProp.includes('2')) return;
+
+        if (feat.geometry && feat.geometry.coordinates) {
+          const coords = feat.geometry.coordinates;
+          let startIndex = -1;
+          let endIndex = -1;
+          let minStartDist = Infinity;
+          let minEndDist = Infinity;
+
+          coords.forEach((pt, idx) => {
+            const dStart = Math.hypot(pt[1] - startPt.LAT, pt[0] - startPt.LONG);
+            const dEnd = Math.hypot(pt[1] - endPt.LAT, pt[0] - endPt.LONG);
+
+            if (dStart < minStartDist) {
+              minStartDist = dStart;
+              startIndex = idx;
+            }
+            if (dEnd < minEndDist) {
+              minEndDist = dEnd;
+              endIndex = idx;
+            }
+          });
+
+          if (startIndex !== -1 && endIndex !== -1 && minStartDist < 0.05 && minEndDist < 0.05) {
+            const from = Math.min(startIndex, endIndex);
+            const to = Math.max(startIndex, endIndex);
+            bestCoords = coords.slice(from, to + 1).map(c => [c[1], c[0]]);
+          }
+        }
+      });
+
+      if (bestCoords.length === 0) {
+        bestCoords = [[startPt.LAT, startPt.LONG], [endPt.LAT, endPt.LONG]];
+      }
+
+      return bestCoords;
+    }
 
     function populateFilters(data) {
       const provinces = [...new Set(data.map(item => item.PROVINCIA).filter(Boolean))];
@@ -334,18 +471,19 @@ function inicializarAplicacionMapa() {
       });
     }
 
-    // Mapa de colores categóricos fijos y contrastados por número de Obra (Evita tonos idénticos)
     function getObraBadgeColor(obra) {
       if (!obra) return 'transparent';
       const obraColorMap = {
-        '803': '#f5b7b1', // Salmón suave
-        '805': '#a9cce3', // Azul cielo
-        '806': '#f9e79f', // Amarillo pastel
-        '808': '#a3e4d7', // Turquesa claro
-        '814': '#d7bde2', // Lila claro
-        '815': '#f8c471'  // Naranja pastel
+        '801': '#d4e6f1',
+        '804': '#fdebd0',
+        '803': '#f5b7b1',
+        '805': '#a9cce3',
+        '806': '#f9e79f',
+        '807': '#d4efdf',
+        '808': '#a3e4d7',
+        '814': '#d7bde2',
+        '815': '#f8c471'
       };
-      // Si la obra existe en el mapa usa su color fijo, sino genera uno determinista seguro de alta distinción
       if (obraColorMap[obra]) {
         return obraColorMap[obra];
       }
@@ -484,6 +622,9 @@ function inicializarAplicacionMapa() {
         <div class="legend-item"><div class="legend-color" style="background:#2563eb;"></div> Estructura</div>
         <div class="legend-item"><div class="legend-color" style="background:#1A6B11;"></div> Línea 2</div>
         <div class="legend-item"><div class="legend-color" style="background:#1C6873;"></div> Línea 4</div>
+        <div class="legend-item"><div class="legend-color" style="background:#10b981; opacity: 0.7;"></div> Túnel TBM (Obra 807)</div>
+        <div class="legend-item"><div class="legend-color" style="background:#3b82f6; opacity: 0.7;"></div> Túnel TBM (Obra 801)</div>
+        <div class="legend-item"><div class="legend-color" style="background:#f59e0b; opacity: 0.7;"></div> Túnel NATM/PTSA (Obra 804)</div>
       `;
       return div;
     };
