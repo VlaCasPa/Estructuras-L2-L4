@@ -63,43 +63,50 @@ body, html {
   flex-shrink: 0;
 }
 
+.header-top-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 6px;
+  gap: 6px;
+}
+
 .app-title-discreet {
   font-size: 0.8rem;
   color: #1e293b;
   font-weight: 700;
-  margin-bottom: 5px;
+  margin-bottom: 0;
   letter-spacing: -0.2px;
 }
 
-/* Estilo para el indicador de usuarios en línea */
+/* Indicador de usuarios en línea en la misma línea del título (derecha) */
 .online-users-badge {
   display: flex;
   align-items: center;
-  gap: 6px;
-  font-size: 0.72rem;
+  gap: 4px;
+  font-size: 0.68rem; /* Un punto más pequeño que el título (0.8rem) */
   font-weight: 600;
   color: #1e293b;
-  margin-bottom: 6px;
-  background: rgba(255, 255, 255, 0.85);
-  padding: 3px 8px;
+  background: rgba(255, 255, 255, 0.9);
+  padding: 2px 6px;
   border-radius: 4px;
-  width: fit-content;
   border: 1px solid #94a3b8;
+  white-space: nowrap;
 }
 
 .online-pulse {
-  width: 8px;
-  height: 8px;
+  width: 7px;
+  height: 7px;
   background-color: #22c55e;
   border-radius: 50%;
   display: inline-block;
-  box-shadow: 0 0 6px #22c55e;
+  box-shadow: 0 0 5px #22c55e;
   animation: pulse-dot 1.5s infinite;
 }
 
 @keyframes pulse-dot {
   0% { transform: scale(0.95); opacity: 0.9; }
-  50% { transform: scale(1.3); opacity: 1; box-shadow: 0 0 10px #22c55e; }
+  50% { transform: scale(1.3); opacity: 1; box-shadow: 0 0 8px #22c55e; }
   100% { transform: scale(0.95); opacity: 0.9; }
 }
 
@@ -400,12 +407,10 @@ body, html {
   }
   .app-title-discreet {
     font-size: 0.68rem;
-    margin-bottom: 4px;
   }
   .online-users-badge {
-    font-size: 0.65rem;
-    padding: 2px 6px;
-    margin-bottom: 4px;
+    font-size: 0.58rem;
+    padding: 2px 4px;
   }
   .filter-input, .filter-select {
     padding: 4px 6px;
