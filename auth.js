@@ -36,7 +36,6 @@ document.addEventListener("DOMContentLoaded", () => {
         }
     });
     
-    // Iniciar el módulo de presencia de usuarios en línea
     iniciarContadorUsuariosEnLinea();
 });
 
