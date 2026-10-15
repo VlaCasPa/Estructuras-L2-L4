@@ -70,13 +70,48 @@ body, html {
   gap: 6px;
 }
 
+.app-title-container {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex: 1;
+}
+
 .app-title-discreet {
   font-size: 0.78rem;
   color: #1e293b;
   font-weight: 700;
   margin-bottom: 0;
   letter-spacing: -0.2px;
-  flex: 1;
+}
+
+/* Botón de acceso al Dashboard Gerencial */
+.dashboard-btn {
+  background: #1e293b;
+  color: #38bdf8;
+  border: 1px solid #334155;
+  padding: 3px 8px;
+  border-radius: 4px;
+  font-size: 0.68rem;
+  font-weight: 600;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  transition: background 0.2s;
+  white-space: nowrap;
+}
+
+.dashboard-btn:hover {
+  background: #0f172a;
+  color: #ffffff;
+}
+
+.header-right-group {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-shrink: 0;
 }
 
 .online-users-badge {
@@ -91,7 +126,6 @@ body, html {
   border-radius: 4px;
   border: 1px solid #94a3b8;
   white-space: nowrap;
-  flex-shrink: 0;
 }
 
 .online-pulse {
@@ -331,6 +365,139 @@ body, html {
   border: 1px solid #64748b;
 }
 
+/* Estilos específicos para el Modal del Dashboard Gerencial */
+.modal-dashboard-overlay {
+  position: fixed;
+  top: 0; left: 0; width: 100vw; height: 100vh;
+  background: rgba(15, 23, 42, 0.85);
+  backdrop-filter: blur(4px);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 20000;
+}
+
+.modal-dashboard-card {
+  background: #f8fafc;
+  border: 1px solid #cbd5e1;
+  width: 94%;
+  max-width: 1050px;
+  max-height: 90vh;
+  border-radius: 10px;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  box-shadow: 0 20px 40px rgba(0,0,0,0.4);
+}
+
+.dash-header {
+  background: #1e293b;
+  color: #ffffff;
+  padding: 14px 20px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.dash-title {
+  font-size: 1rem;
+  font-weight: 700;
+  color: #38bdf8;
+  letter-spacing: 0.3px;
+}
+
+.dash-close-btn {
+  background: #ef4444;
+  color: white;
+  border: none;
+  padding: 5px 10px;
+  border-radius: 4px;
+  font-weight: bold;
+  cursor: pointer;
+  font-size: 0.75rem;
+}
+
+.dash-close-btn:hover {
+  background: #dc2626;
+}
+
+.dash-body {
+  padding: 16px;
+  overflow-y: auto;
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.dash-cards-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(210px, 1fr));
+  gap: 12px;
+}
+
+.dash-card {
+  background: #ffffff;
+  border: 1px solid #e2e8f0;
+  border-radius: 6px;
+  padding: 12px 14px;
+  box-shadow: 0 2px 5px rgba(0,0,0,0.03);
+  border-left: 4px solid #2563eb;
+}
+
+.dash-card.warning { border-left-color: #f59e0b; }
+.dash-card.success { border-left-color: #10b981; }
+.dash-card.danger { border-left-color: #ef4444; }
+
+.dash-card-label {
+  font-size: 0.7rem;
+  color: #64748b;
+  text-transform: uppercase;
+  font-weight: 700;
+  margin-bottom: 4px;
+}
+
+.dash-card-value {
+  font-size: 1.25rem;
+  font-weight: 700;
+  color: #0f172a;
+}
+
+.dash-table-section {
+  background: #ffffff;
+  border: 1px solid #e2e8f0;
+  border-radius: 6px;
+  padding: 12px;
+}
+
+.dash-section-subtitle {
+  font-size: 0.82rem;
+  font-weight: 700;
+  color: #1e293b;
+  margin-bottom: 8px;
+  text-transform: uppercase;
+}
+
+.dash-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.75rem;
+  text-align: left;
+}
+
+.dash-table th {
+  background: #334155;
+  color: #ffffff;
+  padding: 7px 8px;
+  font-weight: 600;
+}
+
+.dash-table td {
+  padding: 6px 8px;
+  border-bottom: 1px solid #e2e8f0;
+  color: #1e293b;
+}
+
 .modal-overlay {
   position: fixed;
   top: 0; left: 0; width: 100vw; height: 100vh;
@@ -403,11 +570,8 @@ body, html {
   background: #f8fafc;
 }
 
-/* Versión Celular Optimizada con leyenda e indicador elevados */
 @media (max-width: 768px) {
-  .text-en-linea {
-    display: none;
-  }
+  .text-en-linea { display: none; }
   body, html {
     padding-top: env(safe-area-inset-top, 4px);
     padding-bottom: env(safe-area-inset-bottom, 16px);
@@ -434,10 +598,14 @@ body, html {
     padding: 6px 8px;
   }
   .app-title-discreet {
-    font-size: 0.65rem;
+    font-size: 0.62rem;
   }
   .online-users-badge {
-    font-size: 0.6rem;
+    font-size: 0.58rem;
+    padding: 2px 4px;
+  }
+  .dashboard-btn {
+    font-size: 0.62rem;
     padding: 2px 5px;
   }
   .filter-input, .filter-select {
@@ -461,11 +629,10 @@ body, html {
   .data-table td {
     padding: 3px 4px;
   }
-  /* Marca de agua elevada y adaptada para celular */
   .author-credit {
-    bottom: 52px !important; /* Elevado para no superponerse a la barra del celular */
+    bottom: 52px !important;
     left: 10px !important;
-    font-size: 0.58rem !important; /* Un punto menos que la leyenda (0.68rem) */
+    font-size: 0.58rem !important;
     padding: 3px 6px !important;
     background: rgba(255, 255, 255, 0.78) !important;
     backdrop-filter: blur(2px);
@@ -473,9 +640,8 @@ body, html {
     box-shadow: 0 1px 3px rgba(0,0,0,0.15) !important;
     color: #334155 !important;
   }
-  /* Leyenda elevada para celular */
   .map-legend {
-    margin-bottom: 48px !important; /* Elevado para quedar dentro de la pantalla */
+    margin-bottom: 48px !important;
     margin-right: 8px !important;
     font-size: 0.62rem;
     padding: 6px 8px;
