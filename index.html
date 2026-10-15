@@ -48,6 +48,82 @@
     </div>
   </div>
 
+  <!-- 3. VENTANA MODAL DEL DASHBOARD GERENCIAL -->
+  <div id="dashboard-modal" class="modal-dashboard-overlay" style="display: none;">
+    <div class="modal-dashboard-card">
+      <div class="dash-header">
+        <div class="dash-title">📊 DASHBOARD GERENCIAL DE PRODUCCIÓN (L2 / L4) - CCM2L</div>
+        <button class="dash-close-btn" onclick="window.cerrarDashboardGerencial()">✕ CERRAR</button>
+      </div>
+      <div class="dash-body">
+        <!-- Tarjetas de KPIs Maestros -->
+        <div class="dash-cards-grid" id="dashCardsContainer">
+          <!-- Generado dinámicamente -->
+        </div>
+
+        <!-- Tabla Analítica por Código de Obra -->
+        <div class="dash-table-section">
+          <div class="dash-section-subtitle">Matriz de Rendimiento por Código de Obra (PMBOK & Lean Construction)</div>
+          <table class="dash-table">
+            <thead>
+              <tr>
+                <th>Código Obra</th>
+                <th>Frente Asociado</th>
+                <th>Estructuras Totales</th>
+                <th>Avance / Liberación</th>
+                <th>SPI Est. (Cronograma)</th>
+                <th>PPC Promedio</th>
+                <th>Estado Crítico</th>
+              </tr>
+            </thead>
+            <tbody id="dashTableObrasBody">
+              <!-- Generado dinámicamente -->
+            </tbody>
+          </table>
+        </div>
+
+        <!-- Registro de Restricciones y Cuellos de Botella -->
+        <div class="dash-table-section">
+          <div class="dash-section-subtitle">Log de Restricciones Activas (Frentes y Permisos)</div>
+          <table class="dash-table">
+            <thead>
+              <tr>
+                <th>Obra</th>
+                <th>Ubicación / Tramo</th>
+                <th>Restricción / Entidad</th>
+                <th>Impacto Operativo</th>
+                <th>Estado</th>
+              </tr>
+            </thead>
+            <tbody id="dashTableRestriccionesBody">
+              <tr>
+                <td>808</td>
+                <td>Ramal L4 (E4-01 a E4-07)</td>
+                <td>Autorización Municipal de Interferencias</td>
+                <td>Alto (Bloqueo de frente de excavación)</td>
+                <td><span style="color: #ef4444; font-weight: bold;">🔴 Crítico</span></td>
+              </tr>
+              <tr>
+                <td>804</td>
+                <td>Túnel NATM (E19 - E27)</td>
+                <td>Interferencia de Servicios (SEDAPAL)</td>
+                <td>Medio (Desvío provisional en ejecución)</td>
+                <td><span style="color: #f59e0b; font-weight: bold;">🟡 En Seguimiento</span></td>
+              </tr>
+              <tr>
+                <td>801</td>
+                <td>Túnel TBM 1 (E04 - E19)</td>
+                <td>Ninguna (Frente liberado)</td>
+                <td>Bajo (Avance continuo nominal)</td>
+                <td><span style="color: #10b981; font-weight: bold;">🟢 Normal</span></td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </div>
+
   <div class="app-container">
     <!-- Mapa -->
     <div id="map">
@@ -58,7 +134,13 @@
     <div class="sidebar">
       <div class="panel-header">
         <div class="header-top-row">
-          <div class="app-title-discreet">Ubicación de las estructuras de la Línea 2 y Ramal L4</div>
+          <div class="app-title-container">
+            <div class="app-title-discreet">Ubicación de las estructuras de la Línea 2 y Ramal L4</div>
+            <button class="dashboard-btn" onclick="window.abrirDashboardGerencial()">
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="9"></rect><rect x="14" y="3" width="7" height="5"></rect><rect x="14" y="12" width="7" height="9"></rect><rect x="3" y="16" width="7" height="5"></rect></svg>
+              Gerencial
+            </button>
+          </div>
           <div id="online-users-badge" class="online-users-badge">
             <span class="online-pulse"></span>
             <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><path d="M23 21v-2a4 4 0 0 0-3-3.87"></path><path d="M16 3.13a4 4 0 0 1 0 7.75"></path></svg>
