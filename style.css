@@ -398,4 +398,10 @@ body, html {
     font-size: 8px;
     padding: 3px 6px;
   }
-  .
+  .map-legend {
+    margin-bottom: 18px !important;
+    margin-right: 8px !important;
+    font-size: 0.62rem;
+    padding: 6px 8px;
+  }
+}
