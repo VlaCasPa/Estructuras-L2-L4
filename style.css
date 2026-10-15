@@ -80,7 +80,7 @@ body, html {
   flex: 1;
 }
 
-/* Indicador de usuarios en línea en la misma línea del título (derecha) */
+/* Indicador de usuarios en línea */
 .online-users-badge {
   display: flex;
   align-items: center;
@@ -275,6 +275,7 @@ body, html {
   margin-bottom: 3px;
 }
 
+/* Leyenda con botón colapsable */
 .map-legend {
   background: rgba(255, 255, 255, 0.98);
   padding: 8px 10px;
@@ -283,10 +284,34 @@ body, html {
   line-height: 1.35;
   font-size: 0.7rem;
   color: #334155;
-  margin-bottom: 30px !important;
+  margin-bottom: 38px !important;
   margin-right: 10px !important;
   border: 1px solid #94a3b8;
   z-index: 1000;
+}
+
+.legend-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  cursor: pointer;
+  font-weight: bold;
+  user-select: none;
+}
+
+.legend-toggle-btn {
+  background: none;
+  border: none;
+  font-size: 11px;
+  cursor: pointer;
+  padding: 0 2px;
+  color: #334155;
+  font-weight: bold;
+}
+
+.legend-body {
+  margin-top: 4px;
+  transition: max-height 0.3s ease;
 }
 
 .legend-item {
@@ -303,7 +328,7 @@ body, html {
   border-radius: 2px;
 }
 
-/* Marca de agua general para escritorio */
+/* Marca de agua general */
 .author-credit {
   position: absolute;
   bottom: 25px;
@@ -392,31 +417,31 @@ body, html {
   background: #f8fafc;
 }
 
-/* Estilos adaptativos para Celular */
+/* Adaptaciones móviles perfeccionadas con márgenes seguros y sin invasión de la barra de sistema */
 @media (max-width: 768px) {
   .text-en-linea {
     display: none;
   }
   body, html {
-    padding-top: env(safe-area-inset-top, 6px);
-    padding-bottom: env(safe-area-inset-bottom, 8px);
+    padding-top: env(safe-area-inset-top, 4px);
+    padding-bottom: env(safe-area-inset-bottom, 16px);
   }
   .app-container {
     flex-direction: column-reverse;
-    padding: 8px 6px 12px 6px;
+    padding: 6px 6px 16px 6px;
     gap: 6px;
     height: 100vh;
   }
   #map {
     flex: 2;
     height: auto;
-    min-height: 52vh;
+    min-height: 48vh;
     border-radius: 8px;
   }
   .sidebar {
     flex: 0 0 auto;
     height: auto;
-    max-height: 44vh; 
+    max-height: 42vh; 
     border-radius: 8px;
   }
   .panel-header {
@@ -434,7 +459,7 @@ body, html {
     font-size: 0.65rem;
   }
   .table-container {
-    max-height: calc(44vh - 65px);
+    max-height: calc(42vh - 65px);
   }
   .section-title {
     font-size: 0.65rem;
@@ -450,20 +475,20 @@ body, html {
   .data-table td {
     padding: 3px 4px;
   }
-  /* Marca de agua profesional y discreta para celular (abajo a la izquierda, translúcida, sin borde y un punto menos que la leyenda) */
+  /* Marca de agua discreta, translúcida, sin borde y levantada por encima de la barra del celular */
   .author-credit {
-    bottom: 25px !important;
+    bottom: 38px !important;
     left: 10px !important;
-    font-size: 0.58rem !important; /* Un punto menos que la leyenda (0.7rem) */
+    font-size: 0.58rem !important; /* Un punto menos que la leyenda (0.68rem) */
     padding: 3px 6px !important;
-    background: rgba(255, 255, 255, 0.75) !important;
+    background: rgba(255, 255, 255, 0.78) !important;
     backdrop-filter: blur(2px);
     border: none !important;
     box-shadow: 0 1px 3px rgba(0,0,0,0.15) !important;
     color: #334155 !important;
   }
   .map-legend {
-    margin-bottom: 22px !important;
+    margin-bottom: 35px !important;
     margin-right: 8px !important;
     font-size: 0.62rem;
     padding: 6px 8px;
