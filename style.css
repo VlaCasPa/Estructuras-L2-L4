@@ -15,7 +15,7 @@ body, html {
   width: 100%;
   height: 100vh;
   overflow: hidden;
-  background-color: #e2e8f0;
+  background-color: #cbd5e1;
 }
 
 .app-container {
@@ -67,7 +67,7 @@ body, html {
   font-size: 0.8rem;
   color: #1e293b;
   font-weight: 700;
-  margin-bottom: 5px;
+  margin-bottom: 6px;
   letter-spacing: -0.2px;
 }
 
@@ -108,12 +108,14 @@ body, html {
 .section-title {
   background: #64748b;
   color: #ffffff;
-  padding: 6px 8px;
+  padding: 5px 8px;
   font-size: 0.72rem;
   font-weight: 700;
   text-transform: uppercase;
   letter-spacing: 0.3px;
-  margin-top: 4px;
+  position: sticky;
+  top: 0;
+  z-index: 15;
 }
 
 .data-table {
@@ -126,9 +128,9 @@ body, html {
 .data-table th {
   background: #8c95a1 !important;
   color: #ffffff;
-  padding: 7px 8px;
+  padding: 6px 8px;
   position: sticky;
-  top: 0;
+  top: 24px;
   z-index: 10;
   border-bottom: 1px solid #64748b;
   font-weight: 600;
@@ -143,7 +145,6 @@ body, html {
   cursor: pointer;
 }
 
-/* Insignia con color categórico estricto por Obra */
 .obra-badge {
   padding: 2px 6px;
   border-radius: 4px;
@@ -163,7 +164,6 @@ body, html {
   color: #0f172a;
 }
 
-/* Etiquetas Distritales Discretas */
 .district-label {
   background: transparent !important;
   border: none !important;
@@ -177,7 +177,6 @@ body, html {
   pointer-events: none;
 }
 
-/* Etiqueta flotante de ID */
 .id-label {
   background: rgba(255, 255, 255, 0.95);
   border: 1px solid #475569;
@@ -210,7 +209,7 @@ body, html {
 }
 
 .popup-title {
-  font-size: 1rem;
+  font-size: 0.95rem;
   font-weight: 700;
   color: #0f172a;
   border-bottom: 1px solid rgba(15, 23, 42, 0.25);
@@ -227,7 +226,7 @@ body, html {
 
 .map-legend {
   background: rgba(255, 255, 255, 0.98);
-  padding: 7px 9px;
+  padding: 8px 10px;
   border-radius: 6px;
   box-shadow: 0 3px 8px rgba(0,0,0,0.2);
   line-height: 1.35;
@@ -242,13 +241,13 @@ body, html {
 .legend-item {
   display: flex;
   align-items: center;
-  gap: 5px;
-  margin-bottom: 2px;
+  gap: 6px;
+  margin-bottom: 3px;
   white-space: nowrap;
 }
 
 .legend-color {
-  width: 10px;
+  width: 12px;
   height: 10px;
   border-radius: 2px;
 }
@@ -341,55 +340,62 @@ body, html {
   background: #f8fafc;
 }
 
+/* Optimización Responsive para Móvil con márgenes de seguridad */
 @media (max-width: 768px) {
+  body, html {
+    padding-top: env(safe-area-inset-top, 6px);
+    padding-bottom: env(safe-area-inset-bottom, 8px);
+  }
   .app-container {
     flex-direction: column-reverse;
-    padding: 3px;
-    gap: 3px;
+    padding: 8px 6px 12px 6px;
+    gap: 6px;
+    height: 100vh;
   }
   #map {
     flex: 2;
     height: auto;
     min-height: 52vh;
+    border-radius: 8px;
   }
   .sidebar {
     flex: 0 0 auto;
     height: auto;
-    max-height: 48vh; 
+    max-height: 44vh; 
+    border-radius: 8px;
   }
   .panel-header {
     padding: 6px 8px;
   }
   .app-title-discreet {
     font-size: 0.68rem;
-    margin-bottom: 3px;
+    margin-bottom: 4px;
   }
   .filter-input, .filter-select {
-    padding: 3px 5px;
+    padding: 4px 6px;
     font-size: 0.65rem;
   }
   .table-container {
-    max-height: calc(48vh - 75px);
+    max-height: calc(44vh - 65px);
+  }
+  .section-title {
+    font-size: 0.65rem;
+    padding: 4px 6px;
   }
   .data-table {
     font-size: 0.62rem;
   }
   .data-table th {
-    padding: 5px 4px;
+    padding: 4px 5px;
+    top: 20px;
   }
   .data-table td {
-    padding: 2px 3px;
+    padding: 3px 4px;
   }
   .author-credit {
-    bottom: 22px;
-    left: 6px;
+    bottom: 12px;
+    left: 8px;
     font-size: 8px;
     padding: 3px 6px;
   }
-  .map-legend {
-    margin-bottom: 35px !important;
-    margin-right: 6px !important;
-    font-size: 0.6rem;
-    padding: 5px 6px;
-  }
-}
+  .
