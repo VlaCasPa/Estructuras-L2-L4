@@ -48,11 +48,11 @@
     </div>
   </div>
 
-  <!-- 3. VENTANA MODAL DEL DASHBOARD GERENCIAL -->
+  <!-- 3. VENTANA MODAL DEL DASHBOARD GERENCIAL (DATA-DRIVEN) -->
   <div id="dashboard-modal" class="modal-dashboard-overlay" style="display: none;">
     <div class="modal-dashboard-card">
       <div class="dash-header">
-        <div class="dash-title">📊 DASHBOARD GERENCIAL DE PRODUCCIÓN (L2 / L4) - CCM2L</div>
+        <div class="dash-title">📊 DASHBOARD GERENCIAL - ESTRUCTURAS Y TÚNELES (L2 / L4)</div>
         <button class="dash-close-btn" onclick="window.cerrarDashboardGerencial()">✕ CERRAR</button>
       </div>
       <div class="dash-body">
@@ -61,19 +61,16 @@
           <!-- Generado dinámicamente -->
         </div>
 
-        <!-- Tabla Analítica por Código de Obra -->
+        <!-- Tabla 1: Estructuras agrupadas por Obra y Línea -->
         <div class="dash-table-section">
-          <div class="dash-section-subtitle">Matriz de Rendimiento por Código de Obra (PMBOK & Lean Construction)</div>
+          <div class="dash-section-subtitle">Estructuras Contenidas por Código de Obra y Línea</div>
           <table class="dash-table">
             <thead>
               <tr>
                 <th>Código Obra</th>
-                <th>Frente Asociado</th>
-                <th>Estructuras Totales</th>
-                <th>Avance / Liberación</th>
-                <th>SPI Est. (Cronograma)</th>
-                <th>PPC Promedio</th>
-                <th>Estado Crítico</th>
+                <th>Línea / Ramal</th>
+                <th>Total Unidades</th>
+                <th>Listado de IDs de Estructuras</th>
               </tr>
             </thead>
             <tbody id="dashTableObrasBody">
@@ -82,41 +79,21 @@
           </table>
         </div>
 
-        <!-- Registro de Restricciones y Cuellos de Botella -->
+        <!-- Tabla 2: Trazos de Túneles -->
         <div class="dash-table-section">
-          <div class="dash-section-subtitle">Log de Restricciones Activas (Frentes y Permisos)</div>
+          <div class="dash-section-subtitle">Matriz de Trazos de Túneles (Origen ➔ Destino)</div>
           <table class="dash-table">
             <thead>
               <tr>
-                <th>Obra</th>
-                <th>Ubicación / Tramo</th>
-                <th>Restricción / Entidad</th>
-                <th>Impacto Operativo</th>
-                <th>Estado</th>
+                <th>Túnel</th>
+                <th>Inicia (Hito)</th>
+                <th>Fin (Hito)</th>
+                <th>Ramal</th>
+                <th>Código Obra</th>
               </tr>
             </thead>
-            <tbody id="dashTableRestriccionesBody">
-              <tr>
-                <td>808</td>
-                <td>Ramal L4 (E4-01 a E4-07)</td>
-                <td>Autorización Municipal de Interferencias</td>
-                <td>Alto (Bloqueo de frente de excavación)</td>
-                <td><span style="color: #ef4444; font-weight: bold;">🔴 Crítico</span></td>
-              </tr>
-              <tr>
-                <td>804</td>
-                <td>Túnel NATM (E19 - E27)</td>
-                <td>Interferencia de Servicios (SEDAPAL)</td>
-                <td>Medio (Desvío provisional en ejecución)</td>
-                <td><span style="color: #f59e0b; font-weight: bold;">🟡 En Seguimiento</span></td>
-              </tr>
-              <tr>
-                <td>801</td>
-                <td>Túnel TBM 1 (E04 - E19)</td>
-                <td>Ninguna (Frente liberado)</td>
-                <td>Bajo (Avance continuo nominal)</td>
-                <td><span style="color: #10b981; font-weight: bold;">🟢 Normal</span></td>
-              </tr>
+            <tbody id="dashTableTunelesBody">
+              <!-- Generado dinámicamente -->
             </tbody>
           </table>
         </div>
