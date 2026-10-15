@@ -303,6 +303,7 @@ body, html {
   border-radius: 2px;
 }
 
+/* Marca de agua general para escritorio */
 .author-credit {
   position: absolute;
   bottom: 25px;
@@ -391,7 +392,7 @@ body, html {
   background: #f8fafc;
 }
 
-/* Ocultar el texto "en línea" exclusivamente en dispositivos móviles para ahorrar espacio */
+/* Estilos adaptativos para Celular */
 @media (max-width: 768px) {
   .text-en-linea {
     display: none;
@@ -449,14 +450,20 @@ body, html {
   .data-table td {
     padding: 3px 4px;
   }
+  /* Marca de agua profesional y discreta para celular (abajo a la izquierda, translúcida, sin borde y un punto menos que la leyenda) */
   .author-credit {
-    bottom: 12px;
-    left: 8px;
-    font-size: 8px;
-    padding: 3px 6px;
+    bottom: 25px !important;
+    left: 10px !important;
+    font-size: 0.58rem !important; /* Un punto menos que la leyenda (0.7rem) */
+    padding: 3px 6px !important;
+    background: rgba(255, 255, 255, 0.75) !important;
+    backdrop-filter: blur(2px);
+    border: none !important;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.15) !important;
+    color: #334155 !important;
   }
   .map-legend {
-    margin-bottom: 18px !important;
+    margin-bottom: 22px !important;
     margin-right: 8px !important;
     font-size: 0.62rem;
     padding: 6px 8px;
