@@ -1,7 +1,7 @@
 // --- CONFIGURACIÓN DE FIREBASE (PROYECTO CENTRAL: MetroL2-IAM-Central) ---
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
 import { getAuth, signInWithPopup, GoogleAuthProvider, signInWithEmailAndPassword, onAuthStateChanged, signOut, setPersistence, browserLocalPersistence } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
-import { getFirestore, doc, getDoc, setDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+import { getFirestore, doc, getDoc, setDoc, collection, onSnapshot, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
 
 const firebaseConfig = {
     apiKey: "AIzaSyC1XakVAZLUDq3-240Q_KoYYPU5JKCTjzs",
@@ -35,7 +35,60 @@ document.addEventListener("DOMContentLoaded", () => {
             mostrarModalLogin();
         }
     });
+    
+    // Iniciar el módulo de presencia de usuarios en línea
+    iniciarContadorUsuariosEnLinea();
 });
+
+// --- MÓDULO DE PRESENCIA Y CONTEO DE USUARIOS EN LÍNEA ---
+function iniciarContadorUsuariosEnLinea() {
+    const clientId = 'user_' + Math.random().toString(36).substring(2, 11) + '_' + Date.now();
+    const presenciaRef = doc(db, "repositorios_presencia", REPO_ACTUAL, "usuarios_activos", clientId);
+
+    // Enviar latido cada 20 segundos para reportar actividad
+    async function enviarLatido() {
+        try {
+            await setDoc(presenciaRef, {
+                ultima_conexion: serverTimestamp(),
+                dispositivo: navigator.userAgent
+            }, { merge: true });
+        } catch (e) {
+            console.warn("No se pudo actualizar presencia:", e);
+        }
+    }
+
+    enviarLatido();
+    const heartbeatInterval = setInterval(enviarLatido, 20000);
+
+    // Escuchar la colección en tiempo real para contar cuántos usuarios tienen actividad reciente (< 45 segundos)
+    const activosRef = collection(db, "repositorios_presencia", REPO_ACTUAL, "usuarios_activos");
+    onSnapshot(activosRef, (snapshot) => {
+        let count = 0;
+        const ahora = Date.now();
+        snapshot.forEach((docSnap) => {
+            const data = docSnap.data();
+            if (data.ultima_conexion) {
+                const timestampServidor = data.ultima_conexion.toMillis ? data.ultima_conexion.toMillis() : ahora;
+                // Si la última señal fue hace menos de 45 segundos, se cuenta como activo
+                if ((ahora - timestampServidor) < 45000) {
+                    count++;
+                }
+            } else {
+                count++;
+            }
+        });
+
+        const spanCount = document.getElementById('online-count');
+        if (spanCount) {
+            spanCount.textContent = Math.max(1, count); // Al menos 1 (el usuario actual)
+        }
+    });
+
+    // Limpiar al cerrar pestaña
+    window.addEventListener('beforeunload', () => {
+        navigator.sendBeacon ? null : clearInterval(heartbeatInterval);
+    });
+}
 
 window.loginConGoogle = async function() {
     try {
@@ -197,7 +250,7 @@ function inicializarAplicacionMapa() {
     let tableRowsMap = new Map();
     let globalLineasGeoJson = null;
 
-    // 5 túneles: TBM 2 de L4 va desde E4-01 hasta el final absoluto de la Línea 4 pasando PV4-07BIS
+    // Definición de los 5 túneles requeridos
     const tunnelDefinitions = [
       { tunnel: 'TBM 2', startId: 'E01', endId: 'E04', branch: 'L2', obra: '807', labelEnd: 'E04' },
       { tunnel: 'TBM 2', startId: 'E4-01', endId: 'FIN_L4', branch: 'L4', obra: '807', labelEnd: 'Fin L4' },
@@ -414,7 +467,6 @@ function inicializarAplicacionMapa() {
           let minStartDist = Infinity;
           let minEndDist = Infinity;
 
-          // Buscar vértice más cercano al punto de inicio
           coords.forEach((pt, idx) => {
             const dStart = Math.hypot(pt[1] - startPt.LAT, pt[0] - startPt.LONG);
             if (dStart < minStartDist) {
@@ -423,7 +475,6 @@ function inicializarAplicacionMapa() {
             }
           });
 
-          // Caso especial: FIN_L2 o FIN_L4 toman el extremo final de la línea respectiva
           if (endPtId === 'FIN_L2' || endPtId === 'FIN_L4') {
             endIndex = coords.length - 1;
             minEndDist = 0;
