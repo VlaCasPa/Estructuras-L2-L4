@@ -197,10 +197,10 @@ function inicializarAplicacionMapa() {
     let tableRowsMap = new Map();
     let globalLineasGeoJson = null;
 
-    // 5 túneles: NATM va de E19 hasta el final total de la Línea 2
+    // 5 túneles: TBM 2 de L4 va desde E4-01 hasta el final absoluto de la Línea 4 pasando PV4-07BIS
     const tunnelDefinitions = [
       { tunnel: 'TBM 2', startId: 'E01', endId: 'E04', branch: 'L2', obra: '807', labelEnd: 'E04' },
-      { tunnel: 'TBM 2', startId: 'E4-01', endId: 'E4-05', branch: 'L4', obra: '807', labelEnd: 'E4-05' },
+      { tunnel: 'TBM 2', startId: 'E4-01', endId: 'FIN_L4', branch: 'L4', obra: '807', labelEnd: 'Fin L4' },
       { tunnel: 'TBM 1', startId: 'E04', endId: 'E19', branch: 'L2', obra: '801', labelEnd: 'E19' },
       { tunnel: 'NATM', startId: 'E19', endId: 'FIN_L2', branch: 'L2', obra: '804', labelEnd: 'Fin L2' },
       { tunnel: 'TR PTSA', startId: 'E24', endId: 'PTSA', branch: 'L2', obra: '804', labelEnd: 'PTSA' }
@@ -423,8 +423,8 @@ function inicializarAplicacionMapa() {
             }
           });
 
-          // Caso especial: FIN_L2 toma el extremo final de la línea
-          if (endPtId === 'FIN_L2') {
+          // Caso especial: FIN_L2 o FIN_L4 toman el extremo final de la línea respectiva
+          if (endPtId === 'FIN_L2' || endPtId === 'FIN_L4') {
             endIndex = coords.length - 1;
             minEndDist = 0;
           } else {
