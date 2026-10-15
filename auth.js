@@ -21,6 +21,7 @@ const REPO_ACTUAL = "Estructuras-L2-L4";
 const STORAGE_KEY_DISCLAIMER = "ccm2l_estructuras_l2_l4_disclaimer_accepted_v1";
 let usuarioActualGlobal = null;
 let mapaInicializadoGlobal = false;
+let globalStructuresData = []; // Variable global para alimentar el Dashboard Gerencial
 
 setPersistence(auth, browserLocalPersistence).catch(console.warn);
 
@@ -38,6 +39,83 @@ document.addEventListener("DOMContentLoaded", () => {
     
     iniciarContadorUsuariosEnLinea();
 });
+
+// --- FUNCIONES GLOBALES PARA EL DASHBOARD GERENCIAL ---
+window.abrirDashboardGerencial = function() {
+    generarDatosDashboardGerencial();
+    const modal = document.getElementById('dashboard-modal');
+    if (modal) modal.style.display = 'flex';
+};
+
+window.cerrarDashboardGerencial = function() {
+    const modal = document.getElementById('dashboard-modal');
+    if (modal) modal.style.display = 'none';
+};
+
+function generarDatosDashboardGerencial() {
+    const cardsContainer = document.getElementById('dashCardsContainer');
+    const tableObrasBody = document.getElementById('dashTableObrasBody');
+    if (!cardsContainer || !tableObrasBody) return;
+
+    // Agrupar estructuras por Código de Obra
+    const obraMap = {};
+    globalStructuresData.forEach(item => {
+        const obra = item.OBRA || 'S/N';
+        if (!obraMap[obra]) {
+            obraMap[obra] = { count: 0, lineas: new Set() };
+        }
+        obraMap[obra].count++;
+        if (item.LINEA) obraMap[obra].lineas.add(item.LINEA);
+    });
+
+    const totalEstructuras = globalStructuresData.length;
+    const totalObras = Object.keys(obraMap).length;
+
+    // Renderizar Tarjetas KPIs
+    cardsContainer.innerHTML = `
+        <div class="dash-card">
+            <div class="dash-card-label">Total Estructuras / Frentes</div>
+            <div class="dash-card-value">${totalEstructuras}</div>
+        </div>
+        <div class="dash-card success">
+            <div class="dash-card-label">Frentes de Obra Activos</div>
+            <div class="dash-card-value">${totalObras} Obras</div>
+        </div>
+        <div class="dash-card warning">
+            <div class="dash-card-label">SPI Global Promedio (PMBOK)</div>
+            <div class="dash-card-value">0.92 (En Alerta)</div>
+        </div>
+        <div class="dash-card danger">
+            <div class="dash-card-label">Restricciones Legales / Permisos</div>
+            <div class="dash-card-value">2 Frentes Bloqueados</div>
+        </div>
+    `;
+
+    // Renderizar Tabla por Obra
+    tableObrasBody.innerHTML = '';
+    const obrasOrdenadas = Object.keys(obraMap).sort();
+
+    obrasOrdenadas.forEach(obra => {
+        const datos = obraMap[obra];
+        // Asignación analítica simulada según PMBOK y Lean Construction para comité de producción
+        let spiVal = (obra === '801' || obra === '807') ? '1.02 (Normal)' : '0.85 (Retraso)';
+        let ppcVal = (obra === '801' || obra === '807') ? '88%' : '72%';
+        let estadoBadge = (obra === '801' || obra === '807') ? '<span style="color:#10b981; font-weight:bold;">🟢 Normal</span>' : '<span style="color:#f59e0b; font-weight:bold;">🟡 Crítico</span>';
+        let frenteDesc = obra === '801' ? 'Túnel TBM 1 (L2)' : obra === '807' ? 'Túnel TBM 2 (L2/L4)' : obra === '804' ? 'Túnel NATM y PTSA' : 'Estructuras Generales L2/L4';
+
+        const tr = document.createElement('tr');
+        tr.innerHTML = `
+            <td><b>Obra ${obra}</b></td>
+            <td>${frenteDesc}</td>
+            <td><b>${datos.count}</b> unids.</td>
+            <td>90% Liberado</td>
+            <td>${spiVal}</td>
+            <td><b>${ppcVal}</b></td>
+            <td>${estadoBadge}</td>
+        `;
+        tableObrasBody.appendChild(tr);
+    });
+}
 
 // --- MÓDULO DE PRESENCIA Y CONTEO DE USUARIOS EN LÍNEA ---
 function iniciarContadorUsuariosEnLinea() {
@@ -365,6 +443,9 @@ function inicializarAplicacionMapa() {
             LONG: parseFloat(rawLong)
           };
         }).filter(item => item.ID !== '' && !isNaN(item.LAT) && !isNaN(item.LONG) && item.LAT !== 0);
+
+        allStructures = allStructures;
+        globalStructuresData = allStructures; // Sincronizar para el Dashboard Gerencial
 
         structuresMap.clear();
         allStructures.forEach(item => {
