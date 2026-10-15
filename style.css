@@ -72,11 +72,12 @@ body, html {
 }
 
 .app-title-discreet {
-  font-size: 0.8rem;
+  font-size: 0.78rem;
   color: #1e293b;
   font-weight: 700;
   margin-bottom: 0;
   letter-spacing: -0.2px;
+  flex: 1;
 }
 
 /* Indicador de usuarios en línea en la misma línea del título (derecha) */
@@ -84,7 +85,7 @@ body, html {
   display: flex;
   align-items: center;
   gap: 4px;
-  font-size: 0.68rem; /* Un punto más pequeño que el título (0.8rem) */
+  font-size: 0.68rem;
   font-weight: 600;
   color: #1e293b;
   background: rgba(255, 255, 255, 0.9);
@@ -92,22 +93,33 @@ body, html {
   border-radius: 4px;
   border: 1px solid #94a3b8;
   white-space: nowrap;
+  flex-shrink: 0;
 }
 
+/* Efecto de latido real (Pulse Ring) */
 .online-pulse {
-  width: 7px;
-  height: 7px;
+  width: 8px;
+  height: 8px;
   background-color: #22c55e;
   border-radius: 50%;
   display: inline-block;
-  box-shadow: 0 0 5px #22c55e;
-  animation: pulse-dot 1.5s infinite;
+  box-shadow: 0 0 0 0 rgba(34, 197, 94, 0.7);
+  animation: pulse-ring 1.25s infinite cubic-bezier(0.215, 0.61, 0.355, 1);
 }
 
-@keyframes pulse-dot {
-  0% { transform: scale(0.95); opacity: 0.9; }
-  50% { transform: scale(1.3); opacity: 1; box-shadow: 0 0 8px #22c55e; }
-  100% { transform: scale(0.95); opacity: 0.9; }
+@keyframes pulse-ring {
+  0% {
+    transform: scale(0.95);
+    box-shadow: 0 0 0 0 rgba(34, 197, 94, 0.7);
+  }
+  70% {
+    transform: scale(1);
+    box-shadow: 0 0 0 6px rgba(34, 197, 94, 0);
+  }
+  100% {
+    transform: scale(0.95);
+    box-shadow: 0 0 0 0 rgba(34, 197, 94, 0);
+  }
 }
 
 .filters-container {
@@ -379,7 +391,11 @@ body, html {
   background: #f8fafc;
 }
 
+/* Ocultar el texto "en línea" exclusivamente en dispositivos móviles para ahorrar espacio */
 @media (max-width: 768px) {
+  .text-en-linea {
+    display: none;
+  }
   body, html {
     padding-top: env(safe-area-inset-top, 6px);
     padding-bottom: env(safe-area-inset-bottom, 8px);
@@ -406,11 +422,11 @@ body, html {
     padding: 6px 8px;
   }
   .app-title-discreet {
-    font-size: 0.68rem;
+    font-size: 0.65rem;
   }
   .online-users-badge {
-    font-size: 0.58rem;
-    padding: 2px 4px;
+    font-size: 0.6rem;
+    padding: 2px 5px;
   }
   .filter-input, .filter-select {
     padding: 4px 6px;
