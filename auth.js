@@ -671,21 +671,40 @@ function inicializarAplicacionMapa() {
     if (distSelect) distSelect.addEventListener('change', applyFilters);
     if (obraSelect) obraSelect.addEventListener('change', applyFilters);
 
+    // Leyenda Interactiva con botón de contraer (flecha invertida)
     const legend = L.control({ position: 'bottomright' });
     legend.onAdd = function (map) {
       const div = L.DomUtil.create('div', 'map-legend');
       div.innerHTML = `
-        <strong>Leyenda</strong>
-        <div class="legend-item"><div class="legend-color" style="background:#2563eb;"></div> Estructura</div>
-        <div class="legend-item"><div class="legend-color" style="background:#1A6B11;"></div> Línea 2</div>
-        <div class="legend-item"><div class="legend-color" style="background:#1C6873;"></div> Línea 4</div>
-        <div class="legend-item"><div class="legend-color" style="background:#10b981; opacity: 0.7;"></div> Túnel TBM (Obra 807)</div>
-        <div class="legend-item"><div class="legend-color" style="background:#3b82f6; opacity: 0.7;"></div> Túnel TBM (Obra 801)</div>
-        <div class="legend-item"><div class="legend-color" style="background:#f59e0b; opacity: 0.7;"></div> Túnel NATM/PTSA (Obra 804)</div>
+        <div class="legend-header" onclick="window.toggleLegend(this)">
+          <span>Leyenda</span>
+          <button class="legend-toggle-btn">▲</button>
+        </div>
+        <div class="legend-body">
+          <div class="legend-item"><div class="legend-color" style="background:#2563eb;"></div> Estructura</div>
+          <div class="legend-item"><div class="legend-color" style="background:#1A6B11;"></div> Línea 2</div>
+          <div class="legend-item"><div class="legend-color" style="background:#1C6873;"></div> Línea 4</div>
+          <div class="legend-item"><div class="legend-color" style="background:#10b981; opacity: 0.7;"></div> Túnel TBM (Obra 807)</div>
+          <div class="legend-item"><div class="legend-color" style="background:#3b82f6; opacity: 0.7;"></div> Túnel TBM (Obra 801)</div>
+          <div class="legend-item"><div class="legend-color" style="background:#f59e0b; opacity: 0.7;"></div> Túnel NATM/PTSA (Obra 804)</div>
+        </div>
       `;
+      L.DomEvent.disableClickPropagation(div);
       return div;
     };
     legend.addTo(map);
+
+    window.toggleLegend = function(headerEl) {
+      const body = headerEl.nextElementSibling;
+      const btn = headerEl.querySelector('.legend-toggle-btn');
+      if (body.style.display === 'none') {
+        body.style.display = 'block';
+        btn.textContent = '▲';
+      } else {
+        body.style.display = 'none';
+        btn.textContent = '▼';
+      }
+    };
 }
 
 function inicializarAplicacionMapaSiEsNecesario() {
