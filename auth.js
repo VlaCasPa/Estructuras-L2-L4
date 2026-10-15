@@ -481,3 +481,170 @@ function inicializarAplicacionMapa() {
         html: `<div style="background-color: #2563eb; width: 14px; height: 14px; border: 2.5px solid white; border-radius: 50%; box-shadow: 0 0 6px rgba(0,0,0,0.5);"></div>`,
         iconSize: [14, 14]
       });
+    }
+
+    function getObraBadgeColor(obra) {
+      if (!obra) return 'transparent';
+      const obraColorMap = {
+        '801': '#d4e6f1',
+        '804': '#fdebd0',
+        '803': '#f5b7b1',
+        '805': '#a9cce3',
+        '806': '#f9e79f',
+        '807': '#d4efdf',
+        '808': '#a3e4d7',
+        '814': '#d7bde2',
+        '815': '#f8c471'
+      };
+      if (obraColorMap[obra]) {
+        return obraColorMap[obra];
+      }
+      const fallbackColors = ['#fadbd8', '#d4efdf', '#d4e6f1', '#fcf3cf', '#e8f8f5', '#ebdef0'];
+      let hash = 0;
+      for (let i = 0; i < obra.length; i++) {
+        hash = obra.charCodeAt(i) + ((hash << 5) - hash);
+      }
+      return fallbackColors[Math.abs(hash) % fallbackColors.length];
+    }
+
+    function updateDisplay(data) {
+      markersLayer.clearLayers();
+      const tbody = document.getElementById('tableBody');
+      if (!tbody) return;
+      tbody.innerHTML = '';
+      tableRowsMap.clear();
+
+      const latLngs = [];
+
+      data.forEach((item) => {
+        const lat = item.LAT;
+        const lng = item.LONG;
+        latLngs.push([lat, lng]);
+
+        const marker = L.marker([lat, lng], { icon: getIconForType(item.TIPO) });
+        
+        const popupContent = `
+          <div class="custom-popup">
+            <div class="popup-title">${item.ID}</div>
+            <div class="popup-row"><b>TIPO:</b> ${item.TIPO || 'N/A'}</div>
+            <div class="popup-row"><b>NOMBRE LÍNEA:</b> ${item.LINEA || 'N/A'}</div>
+            <div class="popup-row"><b>OBRA:</b> ${item.OBRA || 'N/A'}</div>
+            <div class="popup-row"><b>PROVINCIA:</b> ${item.PROVINCIA || 'N/A'}</div>
+            <div class="popup-row"><b>DISTRITO:</b> ${item.DISTRITO || 'N/A'}</div>
+          </div>
+        `;
+        marker.bindPopup(popupContent);
+
+        marker.bindTooltip(item.ID, {
+          permanent: true,
+          direction: 'top',
+          className: 'id-label',
+          offset: [0, -6]
+        });
+
+        markersLayer.addLayer(marker);
+
+        const tr = document.createElement('tr');
+        
+        let distritoFormateado = item.DISTRITO || '';
+        if (distritoFormateado.includes(' y ') || distritoFormateado.includes(' - ') || distritoFormateado.length > 20) {
+            distritoFormateado = distritoFormateado.replace(/ y | \/ | - /g, '\n');
+        }
+
+        const colorBadge = getObraBadgeColor(item.OBRA);
+
+        tr.innerHTML = `
+          <td><b>${item.ID}</b></td>
+          <td>${item.TIPO || ''}</td>
+          <td>${item.LINEA || ''}</td>
+          <td><span class="obra-badge" style="background-color: ${colorBadge};">${item.OBRA || ''}</span></td>
+          <td>${item.PROVINCIA || ''}</td>
+          <td class="district-cell">${distritoFormateado}</td>
+        `;
+
+        tr.addEventListener('mouseenter', () => {
+          tr.classList.add('selected');
+          marker.openPopup();
+          map.panTo([lat, lng], { animate: true });
+        });
+        tr.addEventListener('mouseleave', () => {
+          tr.classList.remove('selected');
+          marker.closePopup();
+        });
+        tr.addEventListener('click', () => {
+          map.setView([lat, lng], 16);
+          marker.openPopup();
+        });
+
+        marker.on('click', () => {
+          document.querySelectorAll('.data-table tr').forEach(row => row.classList.remove('selected'));
+          tr.classList.add('selected');
+          tr.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+        });
+
+        marker.on('mouseover', () => {
+          tr.classList.add('selected');
+        });
+        marker.on('mouseout', () => {
+          tr.classList.remove('selected');
+        });
+
+        tableRowsMap.set(item.ID, tr);
+        tbody.appendChild(tr);
+      });
+
+      if (latLngs.length > 0) {
+        const bounds = L.latLngBounds(latLngs);
+        map.fitBounds(bounds, { padding: [50, 50], maxZoom: 15 });
+      }
+    }
+
+    function applyFilters() {
+      const query = document.getElementById('searchFilter').value.toLowerCase();
+      const prov = document.getElementById('provinceFilter').value;
+      const dist = document.getElementById('districtFilter').value;
+      const obra = document.getElementById('obraFilter').value;
+
+      const filtered = allStructures.filter(item => {
+        const matchQuery = Object.values(item).some(val => String(val).toLowerCase().includes(query));
+        const matchProv = !prov || item.PROVINCIA === prov;
+        const matchDist = !dist || item.DISTRITO === dist;
+        const matchObra = !obra || item.OBRA === obra;
+        return matchQuery && matchProv && matchDist && matchObra;
+      });
+
+      updateDisplay(filtered);
+    }
+
+    const searchInput = document.getElementById('searchFilter');
+    const provSelect = document.getElementById('provinceFilter');
+    const distSelect = document.getElementById('districtFilter');
+    const obraSelect = document.getElementById('obraFilter');
+
+    if (searchInput) searchInput.addEventListener('input', applyFilters);
+    if (provSelect) provSelect.addEventListener('change', applyFilters);
+    if (distSelect) distSelect.addEventListener('change', applyFilters);
+    if (obraSelect) obraSelect.addEventListener('change', applyFilters);
+
+    const legend = L.control({ position: 'bottomright' });
+    legend.onAdd = function (map) {
+      const div = L.DomUtil.create('div', 'map-legend');
+      div.innerHTML = `
+        <strong>Leyenda</strong>
+        <div class="legend-item"><div class="legend-color" style="background:#2563eb;"></div> Estructura</div>
+        <div class="legend-item"><div class="legend-color" style="background:#1A6B11;"></div> Línea 2</div>
+        <div class="legend-item"><div class="legend-color" style="background:#1C6873;"></div> Línea 4</div>
+        <div class="legend-item"><div class="legend-color" style="background:#10b981; opacity: 0.7;"></div> Túnel TBM (Obra 807)</div>
+        <div class="legend-item"><div class="legend-color" style="background:#3b82f6; opacity: 0.7;"></div> Túnel TBM (Obra 801)</div>
+        <div class="legend-item"><div class="legend-color" style="background:#f59e0b; opacity: 0.7;"></div> Túnel NATM/PTSA (Obra 804)</div>
+      `;
+      return div;
+    };
+    legend.addTo(map);
+}
+
+function inicializarAplicacionMapaSiEsNecesario() {
+    if (mapaInicializadoGlobal) return;
+    mapaInicializadoGlobal = true;
+    inicializarAplicacionMapa();
+}
