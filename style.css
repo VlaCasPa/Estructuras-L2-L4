@@ -67,8 +67,40 @@ body, html {
   font-size: 0.8rem;
   color: #1e293b;
   font-weight: 700;
-  margin-bottom: 6px;
+  margin-bottom: 5px;
   letter-spacing: -0.2px;
+}
+
+/* Estilo para el indicador de usuarios en línea */
+.online-users-badge {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 0.72rem;
+  font-weight: 600;
+  color: #1e293b;
+  margin-bottom: 6px;
+  background: rgba(255, 255, 255, 0.85);
+  padding: 3px 8px;
+  border-radius: 4px;
+  width: fit-content;
+  border: 1px solid #94a3b8;
+}
+
+.online-pulse {
+  width: 8px;
+  height: 8px;
+  background-color: #22c55e;
+  border-radius: 50%;
+  display: inline-block;
+  box-shadow: 0 0 6px #22c55e;
+  animation: pulse-dot 1.5s infinite;
+}
+
+@keyframes pulse-dot {
+  0% { transform: scale(0.95); opacity: 0.9; }
+  50% { transform: scale(1.3); opacity: 1; box-shadow: 0 0 10px #22c55e; }
+  100% { transform: scale(0.95); opacity: 0.9; }
 }
 
 .filters-container {
@@ -340,7 +372,6 @@ body, html {
   background: #f8fafc;
 }
 
-/* Optimización Responsive para Móvil con márgenes de seguridad */
 @media (max-width: 768px) {
   body, html {
     padding-top: env(safe-area-inset-top, 6px);
@@ -369,6 +400,11 @@ body, html {
   }
   .app-title-discreet {
     font-size: 0.68rem;
+    margin-bottom: 4px;
+  }
+  .online-users-badge {
+    font-size: 0.65rem;
+    padding: 2px 6px;
     margin-bottom: 4px;
   }
   .filter-input, .filter-select {
