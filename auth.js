@@ -45,7 +45,6 @@ function iniciarContadorUsuariosEnLinea() {
     const clientId = 'user_' + Math.random().toString(36).substring(2, 11) + '_' + Date.now();
     const presenciaRef = doc(db, "repositorios_presencia", REPO_ACTUAL, "usuarios_activos", clientId);
 
-    // Enviar latido cada 20 segundos para reportar actividad
     async function enviarLatido() {
         try {
             await setDoc(presenciaRef, {
@@ -60,7 +59,6 @@ function iniciarContadorUsuariosEnLinea() {
     enviarLatido();
     const heartbeatInterval = setInterval(enviarLatido, 20000);
 
-    // Escuchar la colección en tiempo real para contar cuántos usuarios tienen actividad reciente (< 45 segundos)
     const activosRef = collection(db, "repositorios_presencia", REPO_ACTUAL, "usuarios_activos");
     onSnapshot(activosRef, (snapshot) => {
         let count = 0;
@@ -69,7 +67,6 @@ function iniciarContadorUsuariosEnLinea() {
             const data = docSnap.data();
             if (data.ultima_conexion) {
                 const timestampServidor = data.ultima_conexion.toMillis ? data.ultima_conexion.toMillis() : ahora;
-                // Si la última señal fue hace menos de 45 segundos, se cuenta como activo
                 if ((ahora - timestampServidor) < 45000) {
                     count++;
                 }
@@ -80,11 +77,10 @@ function iniciarContadorUsuariosEnLinea() {
 
         const spanCount = document.getElementById('online-count');
         if (spanCount) {
-            spanCount.textContent = Math.max(1, count); // Al menos 1 (el usuario actual)
+            spanCount.textContent = Math.max(1, count);
         }
     });
 
-    // Limpiar al cerrar pestaña
     window.addEventListener('beforeunload', () => {
         navigator.sendBeacon ? null : clearInterval(heartbeatInterval);
     });
@@ -187,7 +183,7 @@ function ocultarDisclaimer() {
         modal.style.transition = 'opacity 0.3s ease';
         setTimeout(() => { modal.style.display = 'none'; }, 300);
     }
-}
+};
 
 window.aceptarDisclaimer = async function() {
     if (!usuarioActualGlobal) return;
@@ -250,7 +246,6 @@ function inicializarAplicacionMapa() {
     let tableRowsMap = new Map();
     let globalLineasGeoJson = null;
 
-    // Definición de los 5 túneles requeridos
     const tunnelDefinitions = [
       { tunnel: 'TBM 2', startId: 'E01', endId: 'E04', branch: 'L2', obra: '807', labelEnd: 'E04' },
       { tunnel: 'TBM 2', startId: 'E4-01', endId: 'FIN_L4', branch: 'L4', obra: '807', labelEnd: 'Fin L4' },
