@@ -49,12 +49,12 @@
   </div>
 
   <div class="app-container">
-    <!-- Mapa (2/3 en web, superior en celular) -->
+    <!-- Mapa -->
     <div id="map">
       <div class="author-credit">Diseñado por Vladimir Casas</div>
     </div>
 
-    <!-- Panel de Tabla, Filtros (incluyendo Obra) -->
+    <!-- Panel de Tabla, Filtros y Túneles -->
     <div class="sidebar">
       <div class="panel-header">
         <div class="app-title-discreet">Ubicación de las estructuras de la Línea 2 y Ramal L4</div>
@@ -73,7 +73,27 @@
           </div>
         </div>
       </div>
+      
       <div class="table-container">
+        <!-- Tabla Independiente de Túneles -->
+        <div class="section-title">Túneles</div>
+        <table class="data-table" style="margin-bottom: 10px;">
+          <thead>
+            <tr>
+              <th>Túnel</th>
+              <th>Inicia</th>
+              <th>Fin</th>
+              <th>Ramal</th>
+              <th>Obra</th>
+            </tr>
+          </thead>
+          <tbody id="tableBodyTuneles">
+            <!-- Dinámico por código -->
+          </tbody>
+        </table>
+
+        <!-- Tabla de Estructuras -->
+        <div class="section-title">Estructuras de Línea</div>
         <table class="data-table">
           <thead>
             <tr>
@@ -86,14 +106,13 @@
             </tr>
           </thead>
           <tbody id="tableBody">
-            <!-- Datos dinámicos -->
+            <!-- Dinámico -->
           </tbody>
         </table>
       </div>
     </div>
   </div>
 
-  <!-- Scripts de Dependencias y Auth IAM (type="module") -->
   <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.4.1/papaparse.min.js"></script>
   <script src="auth.js" type="module"></script>
