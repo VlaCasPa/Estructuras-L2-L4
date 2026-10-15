@@ -671,7 +671,6 @@ function inicializarAplicacionMapa() {
     if (distSelect) distSelect.addEventListener('change', applyFilters);
     if (obraSelect) obraSelect.addEventListener('change', applyFilters);
 
-    // Leyenda Interactiva con botón de contraer (flecha invertida)
     const legend = L.control({ position: 'bottomright' });
     legend.onAdd = function (map) {
       const div = L.DomUtil.create('div', 'map-legend');
