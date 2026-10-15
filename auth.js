@@ -197,13 +197,13 @@ function inicializarAplicacionMapa() {
     let tableRowsMap = new Map();
     let globalLineasGeoJson = null;
 
-    // Definición de los 5 túneles requeridos (NATM extendido hasta el final de la L2)
+    // 5 túneles: NATM va de E19 hasta el final total de la Línea 2
     const tunnelDefinitions = [
-      { tunnel: 'TBM 2', startId: 'E01', endId: 'E04', branch: 'L2', obra: '807' },
-      { tunnel: 'TBM 2', startId: 'E4-01', endId: 'E4-05', branch: 'L4', obra: '807' },
-      { tunnel: 'TBM 1', startId: 'E04', endId: 'E19', branch: 'L2', obra: '801' },
-      { tunnel: 'NATM', startId: 'E19', endId: 'FIN_L2', branch: 'L2', obra: '804' },
-      { tunnel: 'TR PTSA', startId: 'E24', endId: 'PTSA', branch: 'L2', obra: '804' }
+      { tunnel: 'TBM 2', startId: 'E01', endId: 'E04', branch: 'L2', obra: '807', labelEnd: 'E04' },
+      { tunnel: 'TBM 2', startId: 'E4-01', endId: 'E4-05', branch: 'L4', obra: '807', labelEnd: 'E4-05' },
+      { tunnel: 'TBM 1', startId: 'E04', endId: 'E19', branch: 'L2', obra: '801', labelEnd: 'E19' },
+      { tunnel: 'NATM', startId: 'E19', endId: 'FIN_L2', branch: 'L2', obra: '804', labelEnd: 'Fin L2' },
+      { tunnel: 'TR PTSA', startId: 'E24', endId: 'PTSA', branch: 'L2', obra: '804', labelEnd: 'PTSA' }
     ];
 
     function getTunnelColorByObra(obra) {
@@ -256,7 +256,9 @@ function inicializarAplicacionMapa() {
       .then(data => {
         globalLineasGeoJson = data;
         renderLines(data);
-        renderTunnelsTableAndGeometry();
+        if (allStructures.length > 0) {
+          renderTunnelsTableAndGeometry();
+        }
       })
       .catch(err => console.log("Aviso: El archivo Lineas.geojson se cargará desde la raíz."));
 
@@ -324,7 +326,10 @@ function inicializarAplicacionMapa() {
 
         populateFilters(allStructures);
         updateDisplay(allStructures);
-        renderTunnelsTableAndGeometry();
+        
+        if (globalLineasGeoJson) {
+          renderTunnelsTableAndGeometry();
+        }
       },
       error: function(err) {
         console.error("Error al descargar el CSV:", err);
@@ -339,14 +344,14 @@ function inicializarAplicacionMapa() {
 
       tunnelDefinitions.forEach((t) => {
         const startStruct = structuresMap.get(t.startId);
-        
+
         const tr = document.createElement('tr');
         const badgeColor = getObraBadgeColor(t.obra);
         
         tr.innerHTML = `
           <td><b>${t.tunnel}</b></td>
           <td>${t.startId}</td>
-          <td>${t.endId}</td>
+          <td>${t.labelEnd}</td>
           <td>${t.branch}</td>
           <td><span class="obra-badge" style="background-color: ${badgeColor};">${t.obra}</span></td>
         `;
@@ -354,7 +359,7 @@ function inicializarAplicacionMapa() {
         if (startStruct && globalLineasGeoJson) {
           const tunnelCoords = extractSubsegmentFromLineas(startStruct, t.endId, t.branch);
           
-          if (tunnelCoords.length > 0) {
+          if (tunnelCoords && tunnelCoords.length > 0) {
             const tunnelColor = getTunnelColorByObra(t.obra);
             const polyline = L.polyline(tunnelCoords, {
               color: tunnelColor,
@@ -366,7 +371,7 @@ function inicializarAplicacionMapa() {
             polyline.bindPopup(`
               <div class="custom-popup">
                 <div class="popup-title">TÚNEL: ${t.tunnel}</div>
-                <div class="popup-row"><b>TRAMO:</b> ${t.startId} ➔ ${t.endId}</div>
+                <div class="popup-row"><b>TRAMO:</b> ${t.startId} ➔ ${t.labelEnd}</div>
                 <div class="popup-row"><b>RAMAL / LÍNEA:</b> ${t.branch}</div>
                 <div class="popup-row"><b>OBRA:</b> ${t.obra}</div>
               </div>
@@ -403,12 +408,13 @@ function inicializarAplicacionMapa() {
         if (branch === 'L2' && !lineaProp.includes('2')) return;
 
         if (feat.geometry && feat.geometry.coordinates) {
-          const coords = feat.geometry.coordinates;
+          const coords = feat.geometry.coordinates; // [[lng, lat], ...]
           let startIndex = -1;
           let endIndex = -1;
           let minStartDist = Infinity;
           let minEndDist = Infinity;
 
+          // Buscar vértice más cercano al punto de inicio
           coords.forEach((pt, idx) => {
             const dStart = Math.hypot(pt[1] - startPt.LAT, pt[0] - startPt.LONG);
             if (dStart < minStartDist) {
@@ -417,8 +423,10 @@ function inicializarAplicacionMapa() {
             }
           });
 
+          // Caso especial: FIN_L2 toma el extremo final de la línea
           if (endPtId === 'FIN_L2') {
             endIndex = coords.length - 1;
+            minEndDist = 0;
           } else {
             const endStruct = structuresMap.get(endPtId);
             if (endStruct) {
@@ -473,107 +481,3 @@ function inicializarAplicacionMapa() {
         html: `<div style="background-color: #2563eb; width: 14px; height: 14px; border: 2.5px solid white; border-radius: 50%; box-shadow: 0 0 6px rgba(0,0,0,0.5);"></div>`,
         iconSize: [14, 14]
       });
-    }
-
-    function getObraBadgeColor(obra) {
-      if (!obra) return 'transparent';
-      const obraColorMap = {
-        '801': '#d4e6f1',
-        '804': '#fdebd0',
-        '803': '#f5b7b1',
-        '805': '#a9cce3',
-        '806': '#f9e79f',
-        '807': '#d4efdf',
-        '808': '#a3e4d7',
-        '814': '#d7bde2',
-        '815': '#f8c471'
-      };
-      if (obraColorMap[obra]) {
-        return obraColorMap[obra];
-      }
-      const fallbackColors = ['#fadbd8', '#d4efdf', '#d4e6f1', '#fcf3cf', '#e8f8f5', '#ebdef0'];
-      let hash = 0;
-      for (let i = 0; i < obra.length; i++) {
-        hash = obra.charCodeAt(i) + ((hash << 5) - hash);
-      }
-      return fallbackColors[Math.abs(hash) % fallbackColors.length];
-    }
-
-    function updateDisplay(data) {
-      markersLayer.clearLayers();
-      const tbody = document.getElementById('tableBody');
-      if (!tbody) return;
-      tbody.innerHTML = '';
-      tableRowsMap.clear();
-
-      const latLngs = [];
-
-      data.forEach((item) => {
-        const lat = item.LAT;
-        const lng = item.LONG;
-        latLngs.push([lat, lng]);
-
-        const marker = L.marker([lat, lng], { icon: getIconForType(item.TIPO) });
-        
-        const popupContent = `
-          <div class="custom-popup">
-            <div class="popup-title">${item.ID}</div>
-            <div class="popup-row"><b>TIPO:</b> ${item.TIPO || 'N/A'}</div>
-            <div class="popup-row"><b>NOMBRE LÍNEA:</b> ${item.LINEA || 'N/A'}</div>
-            <div class="popup-row"><b>OBRA:</b> ${item.OBRA || 'N/A'}</div>
-            <div class="popup-row"><b>PROVINCIA:</b> ${item.PROVINCIA || 'N/A'}</div>
-            <div class="popup-row"><b>DISTRITO:</b> ${item.DISTRITO || 'N/A'}</div>
-          </div>
-        `;
-        marker.bindPopup(popupContent);
-
-        marker.bindTooltip(item.ID, {
-          permanent: true,
-          direction: 'top',
-          className: 'id-label',
-          offset: [0, -6]
-        });
-
-        markersLayer.addLayer(marker);
-
-        const tr = document.createElement('tr');
-        
-        let distritoFormateado = item.DISTRITO || '';
-        if (distritoFormateado.includes(' y ') || distritoFormateado.includes(' - ') || distritoFormateado.length > 20) {
-            distritoFormateado = distritoFormateado.replace(/ y | \/ | - /g, '\n');
-        }
-
-        const colorBadge = getObraBadgeColor(item.OBRA);
-
-        tr.innerHTML = `
-          <td><b>${item.ID}</b></td>
-          <td>${item.TIPO || ''}</td>
-          <td>${item.LINEA || ''}</td>
-          <td><span class="obra-badge" style="background-color: ${colorBadge};">${item.OBRA || ''}</span></td>
-          <td>${item.PROVINCIA || ''}</td>
-          <td class="district-cell">${distritoFormateado}</td>
-        `;
-
-        tr.addEventListener('mouseenter', () => {
-          tr.classList.add('selected');
-          marker.openPopup();
-          map.panTo([lat, lng], { animate: true });
-        });
-        tr.addEventListener('mouseleave', () => {
-          tr.classList.remove('selected');
-          marker.closePopup();
-        });
-        tr.addEventListener('click', () => {
-          map.setView([lat, lng], 16);
-          marker.openPopup();
-        });
-
-        marker.on('click', () => {
-          document.querySelectorAll('.data-table tr').forEach(row => row.classList.remove('selected'));
-          tr.classList.add('selected');
-          tr.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
-        });
-
-        marker.on('mouseover', () => {
-          tr.classList.add('selected');
-        });
