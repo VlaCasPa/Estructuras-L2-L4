@@ -1,1 +1,128 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Ubicación de las estructuras de la Línea 2 y Ramal L4</title>
+  
+  <!-- Leaflet CSS -->
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+  <!-- Custom CSS -->
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
 
+  <!-- 1. VENTANA MODAL DE INICIO DE SESIÓN CORPORATIVO (IAM CENTRAL) -->
+  <div id="login-modal" class="modal-overlay" style="display: none; z-index: 10000;">
+    <div class="modal-card" style="text-align: center;">
+      <div class="modal-title">SISTEMA DE CONTROL - IAM CENTRAL</div>
+      <div class="modal-text" style="text-align: center;">
+        Administración Contractual Estructuras L2/L4 - <strong>Consorcio Constructor Metro 2 de Lima (CCM2L)</strong>
+      </div>
+      <div style="margin-bottom: 12px; display: flex; flex-direction: column; gap: 8px;">
+        <input type="email" id="login-email" placeholder="Correo Corporativo" class="filter-input" style="text-align: center;" />
+        <input type="password" id="login-password" placeholder="Contraseña" class="filter-input" style="text-align: center;" />
+        <button type="button" class="modal-btn" onclick="window.loginConCorreoPassword()">Ingresar al Sistema</button>
+      </div>
+      <div style="border-top: 1px solid #334155; padding-top: 10px; margin-top: 10px;">
+        <span style="font-size: 0.75rem; color: #94a3b8; display: block; margin-bottom: 6px;">Opciones Alternas:</span>
+        <button type="button" class="modal-btn google-btn" onclick="window.loginConGoogle()">
+          <svg width="18" height="18" viewBox="0 0 24 24"><path fill="#4285F4" d="M23.745 12.27c0-.7-.06-1.4-.19-2.07H12v4.51h6.6c-.29 1.52-1.14 2.82-2.4 3.68v3.05h3.88c2.27-2.09 3.66-5.17 3.66-9.17z"/><path fill="#34A853" d="M12 24c3.24 0 5.95-1.08 7.93-2.91l-3.88-3.05c-1.08.72-2.45 1.16-4.05 1.16-3.12 0-5.77-2.1-6.72-4.93H1.2v3.15C3.16 21.32 7.22 24 12 24z"/><path fill="#FBBC05" d="M5.28 14.27c-.25-.72-.38-1.49-.38-2.27s.13-1.55.38-2.27V6.58H1.2C.44 8.13 0 9.99 0 12s.44 3.87 1.2 5.42l4.08-3.15z"/><path fill="#EA4335" d="M12 4.75c1.77 0 3.35.61 4.6 1.8l3.42-3.42C17.95 1.19 15.24 0 12 0 7.22 0 3.16 2.68 1.2 6.58l4.08 3.15c.95-2.83 3.6-4.98 6.72-4.98z"/></svg>
+          Ingresar con Google
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- 2. VENTANA MODAL DE ADVERTENCIA Y CONFIDENCIALIDAD (DISCLAIMER) -->
+  <div id="disclaimer-modal" class="modal-overlay" style="display: none; z-index: 10005;">
+    <div class="modal-card">
+      <div class="modal-title">AVISO DE CONFIDENCIALIDAD Y USO RESTRINGIDO</div>
+      <div class="modal-text">
+        El presente aplicativo y repositorio constituyen una herramienta de gestión operativa de uso exclusivo para el personal autorizado del <strong>Consorcio Constructor Metro 2 de Lima (CCM2L)</strong>. Queda terminantemente prohibida la reproducción, distribución, comercialización o uso de la presente información para fines ajenos a los contractuales y de supervisión de obra.
+      </div>
+      <div class="modal-text">
+        El acceso no autorizado, la extracción, el uso indebido o la divulgación de los datos contenidos contravienen las normas internas de seguridad de la información, el deber de confidencialidad y la <strong>Ley N° 30096 (Ley de Delitos Informáticos)</strong> y la <strong>Ley N° 29733 (Ley de Protección de Datos Personales)</strong>, quedando el infractor sujeto a las sanciones laborales correspondientes y a las responsabilidades civiles y penales previstas en la legislación de la República del Perú.
+      </div>
+      <button id="btn-aceptar-disclaimer" type="button" class="modal-btn" onclick="window.aceptarDisclaimer()">HE LEÍDO Y ACEPTO LOS TÉRMINOS DE CONFIDENCIALIDAD</button>
+    </div>
+  </div>
+
+  <div class="app-container">
+    <!-- Mapa -->
+    <div id="map">
+      <div class="author-credit">Diseñado por Vladimir Casas</div>
+    </div>
+
+    <!-- Panel de Tabla, Filtros y Túneles -->
+    <div class="sidebar">
+      <div class="panel-header">
+        <div class="header-top-row">
+          <div class="app-title-discreet">Ubicación de las estructuras de la Línea 2 y Ramal L4</div>
+          <div id="online-users-badge" class="online-users-badge">
+            <span class="online-pulse"></span>
+            <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><path d="M23 21v-2a4 4 0 0 0-3-3.87"></path><path d="M16 3.13a4 4 0 0 1 0 7.75"></path></svg>
+            <span>(<span id="online-count">1</span>) <span class="text-en-linea">en línea</span></span>
+          </div>
+        </div>
+
+        <div class="filters-container">
+          <input type="text" id="searchFilter" class="filter-input" placeholder="Filtrar por ID, Nombre, Tipo u Obra..." />
+          <div class="filters-row">
+            <select id="provinceFilter" class="filter-select">
+              <option value="">Todas las Provincias</option>
+            </select>
+            <select id="districtFilter" class="filter-select">
+              <option value="">Todos los Distritos</option>
+            </select>
+            <select id="obraFilter" class="filter-select">
+              <option value="">Todas las Obras</option>
+            </select>
+          </div>
+        </div>
+      </div>
+      
+      <div class="table-container">
+        <!-- Tabla Independiente de Túneles -->
+        <div class="section-title">Túneles</div>
+        <table class="data-table" style="margin-bottom: 10px;">
+          <thead>
+            <tr>
+              <th>Túnel</th>
+              <th>Inicia</th>
+              <th>Fin</th>
+              <th>Ramal</th>
+              <th>Obra</th>
+            </tr>
+          </thead>
+          <tbody id="tableBodyTuneles">
+            <!-- Dinámico -->
+          </tbody>
+        </table>
+
+        <!-- Tabla de Estructuras -->
+        <div class="section-title">Estructuras de Línea</div>
+        <table class="data-table">
+          <thead>
+            <tr>
+              <th>ID</th>
+              <th>Tipo</th>
+              <th>Línea</th>
+              <th>Obra</th>
+              <th>Provincia</th>
+              <th>Distrito</th>
+            </tr>
+          </thead>
+          <tbody id="tableBody">
+            <!-- Dinámico -->
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.4.1/papaparse.min.js"></script>
+  <script src="auth.js" type="module"></script>
+</body>
+</html>
